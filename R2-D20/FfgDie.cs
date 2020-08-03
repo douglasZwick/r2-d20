@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using DSharpPlus.Entities;
+using System.Collections.Generic;
 using System.Security.Cryptography.X509Certificates;
 
 namespace R2D20
@@ -149,6 +150,28 @@ namespace R2D20
       { Symbol.None, "<:blank_die:739645851894415452>" },
     };
 
+    public static Dictionary<FfgDie, string> s_EmojiByDie = new Dictionary<FfgDie, string>()
+    {
+      { s_BoostDie, "<:boostDie:739284154415317023>" },
+      { s_SetbackDie, "<:setbackDie:739284154516242482>" },
+      { s_AbilityDie, "<:abilityDie:739284154688077824>" },
+      { s_DifficultyDie, "<:difficultyDie:739284154436550698>" },
+      { s_ProficiencyDie, "<:proficiencyDie:739284154696335360>" },
+      { s_ChallengeDie, "<:challengeDie:739284154666975242>" },
+      { s_ForceDie, "<:forceDie:739284154515980328>" },
+    };
+
+    public static Dictionary<FfgDie, Type> s_DieTypeByDie = new Dictionary<FfgDie, Type>()
+    {
+      { s_BoostDie, Type.Boost },
+      { s_SetbackDie, Type.Setback },
+      { s_AbilityDie, Type.Ability },
+      { s_DifficultyDie, Type.Difficulty },
+      { s_ProficiencyDie, Type.Proficiency },
+      { s_ChallengeDie, Type.Challenge },
+      { s_ForceDie, Type.Force },
+    };
+
     public class Pool
     {
       public class RollResult
@@ -197,6 +220,39 @@ namespace R2D20
           ++m_Counts[die];
         else
           m_Counts[die] = 1;
+      }
+
+      public void Remove(FfgDie die)
+      {
+        if (m_Counts.ContainsKey(die))
+        {
+          --m_Counts[die];
+
+          if (m_Counts[die] == 0)
+            m_Counts.Remove(die);
+        }
+      }
+
+      public string GetSortedEmojiString()
+      {
+        var emojiString = string.Empty;
+        var typeList = new List<Type>();
+
+        foreach (var entry in m_Counts)
+        {
+          var die = entry.Key;
+          var count = entry.Value;
+
+          for (var i = 0; i < count; ++i)
+            typeList.Add(s_DieTypeByDie[die]);
+        }
+
+        typeList.Sort();
+
+        foreach (var type in typeList)
+          emojiString += s_DiceEmoji[type] + " ";
+
+        return emojiString;
       }
 
       public RollResult Roll()

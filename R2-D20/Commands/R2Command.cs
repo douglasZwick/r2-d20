@@ -1,7 +1,9 @@
 ﻿using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
+using DSharpPlus.EventArgs;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 namespace R2D20
@@ -53,6 +55,8 @@ namespace R2D20
       { "<:forceDie:739284154515980328>", FfgDie.s_ForceDie },
     };
 
+    public static FfgDie.Pool s_CurrentPool = new FfgDie.Pool();
+
     [Command("ping")]
     public async Task Ping(CommandContext ctx)
     {
@@ -101,46 +105,132 @@ namespace R2D20
       }
     }
 
+    [Command("pool")]
+    public async Task Pool(CommandContext ctx, params string[] args)
+    {
+      string message;
+
+      if (args.Length == 0)
+      {
+        var emojiString = s_CurrentPool.GetSortedEmojiString();
+        message = string.IsNullOrEmpty(emojiString) ? "[mlep]" : "[wheeoow " + emojiString + "]";
+      }
+      else
+      {
+        s_CurrentPool = new FfgDie.Pool();
+        var emojiString = AddHelper(args);
+        message = string.IsNullOrEmpty(emojiString) ? "[zurp]" : "[bweep " + emojiString + "]";
+      }
+
+      await Reply(ctx, message);
+    }
+
+    [Command("add")]
+    public async Task Add(CommandContext ctx, params string[] args)
+    {
+      if (s_CurrentPool == null || s_CurrentPool.m_Counts.Count == 0)
+        s_CurrentPool = new FfgDie.Pool();
+      var emojiString = AddHelper(args);
+      var message = string.IsNullOrEmpty(emojiString) ? "[zurp]" : "[zeeb " + emojiString + "]";
+
+      await Reply(ctx, message);
+    }
+
+    [Command("remove")]
+    public async Task Remove(CommandContext ctx, params string[] args)
+    {
+      string message;
+
+      if (s_CurrentPool == null || s_CurrentPool.m_Counts.Count == 0)
+      {
+        message = "[gzzgwoooo]";
+      }
+      else
+      {
+        foreach (var arg in args)
+          if (s_DiceByString.ContainsKey(arg))
+            s_CurrentPool.Remove(s_DiceByString[arg]);
+
+        var emojiString = s_CurrentPool.GetSortedEmojiString();
+        message = string.IsNullOrEmpty(emojiString) ? "[plibt]" : "[gzweeg " + emojiString + "]";
+      }
+
+      await Reply(ctx, message);
+    }
+
+    [Command("clear")]
+    public async Task Clear(CommandContext ctx)
+    {
+      s_CurrentPool = new FfgDie.Pool();
+      await Reply(ctx, "[weeboo weeboo wzzp]");
+    }
+
     [Command("roll")]
     public async Task Roll(CommandContext ctx, params string[] args)
     {
-      string message = "[ ";
+      FfgDie.Pool pool;
 
-      var pool = new FfgDie.Pool();
+      if (args.Length == 0)
+      {
+        pool = s_CurrentPool;
+      }
+      else
+      {
+        pool = new FfgDie.Pool();
+        foreach (var arg in args)
+          if (s_DiceByString.ContainsKey(arg))
+            pool.Add(s_DiceByString[arg]);
+      }
+
+      if (pool.m_Counts.Count == 0)
+      {
+        await Reply(ctx, "[bzzzp woop]");
+      }
+      else
+      {
+        var result = pool.Roll();
+        var keysList = result.m_Result.Keys.ToList();
+        keysList.Sort();
+
+        string message = "[ ";
+        var resultMessage = string.Empty;
+
+        foreach (var key in keysList)
+        {
+          var count = result.m_Result[key];
+          for (var i = 0; i < count; ++i)
+          {
+            var symbolEmoji = FfgDie.s_SymbolEmoji[key];
+            resultMessage += symbolEmoji;
+          }
+        }
+
+        if (resultMessage == string.Empty)
+          resultMessage = FfgDie.s_SymbolEmoji[FfgDie.Symbol.None];
+
+        message += resultMessage + " **|** ";
+
+        message += pool.GetSortedEmojiString() + "**:** ";
+
+        foreach (var symbol in result.m_SymbolList)
+        {
+          var symbolEmoji = FfgDie.s_SymbolEmoji[symbol];
+          message += symbolEmoji;
+        }
+
+        message += " ]";
+
+        await Reply(ctx, message);
+      }
+    }
+
+    private string AddHelper(string[] args)
+    {
       foreach (var arg in args)
         if (s_DiceByString.ContainsKey(arg))
-          pool.Add(s_DiceByString[arg]);
+          s_CurrentPool.Add(s_DiceByString[arg]);
 
-      var result = pool.Roll();
-      var keysList = result.m_Result.Keys.ToList();
-      keysList.Sort();
-
-      var resultMessage = string.Empty;
-
-      foreach (var key in keysList)
-      {
-        var count = result.m_Result[key];
-        for (var i = 0; i < count; ++i)
-        {
-          var emojiString = FfgDie.s_SymbolEmoji[key];
-          resultMessage += emojiString;
-        }
-      }
-
-      if (resultMessage == string.Empty)
-        resultMessage = FfgDie.s_SymbolEmoji[FfgDie.Symbol.None];
-
-      message += resultMessage + " | ";
-
-      foreach (var symbol in result.m_SymbolList)
-      {
-        var emojistring = FfgDie.s_SymbolEmoji[symbol];
-        message += emojistring;
-      }
-
-      message += " ]";
-
-      await Reply(ctx, message);
+      return s_CurrentPool.GetSortedEmojiString();
     }
 
     private string Roll(uint die)
@@ -177,8 +267,6 @@ namespace R2D20
 
       return $"[beep boop **{total}** :{rollString}]";
     }
-
-
 
     private async Task Say(CommandContext ctx, string message)
     {
