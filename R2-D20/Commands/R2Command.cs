@@ -1,9 +1,14 @@
-﻿using DSharpPlus.CommandsNext;
+﻿using DSharpPlus;
+using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
-using DSharpPlus.EventArgs;
+using DSharpPlus.Entities;
+using DSharpPlus.VoiceNext;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace R2D20
@@ -55,24 +60,197 @@ namespace R2D20
       { "<:forceDie:739284154515980328>", FfgDie.s_ForceDie },
     };
 
+    public static List<string> s_VeryHappySounds = new List<string>()
+    {
+      "excited",
+      "laughing",
+      "unbelievable",
+    };
+
+    public static List<string> s_HappySounds = new List<string>()
+    {
+      "cheerful",
+      "eureka",
+      "veryexcited",
+    };
+
+    public static List<string> s_KindaHappySounds = new List<string>()
+    {
+      "playful",
+      "proud",
+    };
+
+    public static List<string> s_VeryUpsetSounds = new List<string>()
+    {
+      "snappy",
+      "surprised",
+    };
+
+    public static List<string> s_UpsetSounds = new List<string>()
+    {
+      "processing",
+      "sad",
+    };
+
+    public static List<string> s_KindaUpsetSounds = new List<string>()
+    {
+      "concerned",
+      "look",
+    };
+
+    public static List<string> s_UnsureSounds = new List<string>()
+    {
+      "unsure",
+      "determined",
+    };
+
+    public static List<string> s_ChaosSounds = new List<string>()
+    {
+      "shocked",
+    };
+
+    public static List<string> s_CommandSounds = new List<string>()
+    {
+      "cheerful",
+      "look",
+      "playful",
+    };
+
+    public static List<string> s_ErrorSounds = new List<string>()
+    {
+      "snappy",
+      "unsure",
+    };
+
     public static FfgDie.Pool s_CurrentPool = new FfgDie.Pool();
 
     [Command("ping")]
     public async Task Ping(CommandContext ctx)
     {
-      await Say(ctx, "[beep]");
+      await Say(ctx, "[ Beep. ]");
+      await Play(ctx, PickRandom(s_CommandSounds));
     }
 
     [Command("echo")]
     public async Task Echo(CommandContext ctx, params string[] args)
     {
-      var message = "[zeep]\n";
+      var message = "[ Meep ]\n";
       foreach (var arg in args)
       {
         message += "`" + arg + "`\n";
       }
-      message += "[burp]";
+      message += "[ zorp. ]";
       await Say(ctx, message);
+      await Play(ctx, PickRandom(s_CommandSounds));
+    }
+
+    [Command("join")]
+    public async Task Join(CommandContext ctx, [RemainingText] string channelName)
+    {
+      var voiceNext = ctx.Client.GetVoiceNext();
+
+      DiscordChannel channel = null;
+
+      if (string.IsNullOrEmpty(channelName))
+      {
+        channel = ctx.Member?.VoiceState?.Channel;
+        if (channel == null)
+          throw new InvalidOperationException("You need to be in a voice channel.");
+      }
+      else
+      {
+        var allChannels = ctx.Guild.Channels;
+        var values = allChannels.Values;
+        foreach (var value in values)
+        {
+          if (value.Name == channelName)
+          {
+            channel = value;
+            break;
+          }
+        }
+
+        if (channel == null)
+          throw new InvalidOperationException("There doesn't seem to be a channel by that name.");
+      }
+
+      var voiceNextConnection = voiceNext.GetConnection(ctx.Guild);
+      if (voiceNextConnection != null)
+      {
+        if (voiceNextConnection.Channel == channel)
+        {
+          var spec = string.IsNullOrEmpty(channelName) ? "your" : "that";
+          throw new InvalidOperationException($"R2-D20 is already connected to {spec} channel.");
+        }
+
+        await Leave(ctx);
+      }
+
+      await voiceNext.ConnectAsync(channel);
+    }
+
+    [Command("leave")]
+    public async Task Leave(CommandContext ctx)
+    {
+      var voiceNext = ctx.Client.GetVoiceNext();
+
+      var voiceNextConnection = voiceNext.GetConnection(ctx.Guild);
+      if (voiceNextConnection == null)
+        throw new InvalidOperationException("R2-D20 is not connected to a voice channel in this server.");
+
+      await Task.Run(voiceNextConnection.Disconnect);
+    }
+
+    [Command("play")]
+    public async Task Play(CommandContext ctx, [RemainingText] string soundName)
+    {
+      var guild = ctx.Guild;
+      if (guild == null)
+        throw new InvalidOperationException("No guild, no voice channels. Was this a DM...?");
+
+      var path = $"audio{Path.DirectorySeparatorChar}{soundName}.mp3";
+
+      var voiceNext = ctx.Client.GetVoiceNext();
+
+      var voiceNextConnection = voiceNext.GetConnection(guild);
+      if (voiceNextConnection == null)
+        throw new InvalidOperationException("R2-D20 is not connected to a voice channel in this server.");
+
+      if (!File.Exists(path))
+        throw new FileNotFoundException("That file was not found.");
+
+      await voiceNextConnection.SendSpeakingAsync(true);  // this tells the server we're speaking
+
+      var psi = new ProcessStartInfo
+      {
+        FileName = "ffmpeg",
+        Arguments = $@"-i ""{path}"" -ac 2 -f s16le -ar 48000 pipe:1",
+        RedirectStandardOutput = true,
+        UseShellExecute = false,
+      };
+      var ffmpeg = Process.Start(psi);
+      var ffout = ffmpeg.StandardOutput.BaseStream;
+
+      var stream = voiceNextConnection.GetTransmitStream(20);
+      await ffout.CopyToAsync(stream);
+      await stream.FlushAsync();
+
+      await voiceNextConnection.WaitForPlaybackFinishAsync();
+    }
+
+    [Command("soundlist")]
+    public async Task SoundList(CommandContext ctx)
+    {
+      var names = Directory.GetFiles("audio");
+      var message = "[ Here are the sounds that I can play: ]";
+
+      foreach (var name in names)
+      {
+        message += $"{Environment.NewLine}• {Path.GetFileNameWithoutExtension(name)}";
+      }
+
+      await Reply(ctx, message);
+      await Play(ctx, PickRandom(s_CommandSounds));
     }
 
     [Command("rolln")]
@@ -108,21 +286,20 @@ namespace R2D20
     [Command("pool")]
     public async Task Pool(CommandContext ctx, params string[] args)
     {
-      string message;
-
       if (args.Length == 0)
       {
         var emojiString = s_CurrentPool.GetSortedEmojiString();
-        message = string.IsNullOrEmpty(emojiString) ? "[mlep]" : "[wheeoow " + emojiString + "]";
+        if (string.IsNullOrEmpty(emojiString))
+          await Reply(ctx, "[ The pool is currently empty. ]");
+        else
+          await Reply(ctx, $"[ The pool currently contains {emojiString}. ]");
+        await Play(ctx, PickRandom(s_CommandSounds));
       }
       else
       {
         s_CurrentPool = new FfgDie.Pool();
-        var emojiString = AddHelper(args);
-        message = string.IsNullOrEmpty(emojiString) ? "[zurp]" : "[bweep " + emojiString + "]";
+        await AddHelper(ctx, args);
       }
-
-      await Reply(ctx, message);
     }
 
     [Command("add")]
@@ -130,39 +307,81 @@ namespace R2D20
     {
       if (s_CurrentPool == null || s_CurrentPool.m_Counts.Count == 0)
         s_CurrentPool = new FfgDie.Pool();
-      var emojiString = AddHelper(args);
-      var message = string.IsNullOrEmpty(emojiString) ? "[zurp]" : "[zeeb " + emojiString + "]";
+      await AddHelper(ctx, args);
+    }
 
-      await Reply(ctx, message);
+    [Command("addsecret")]
+    public async Task AddSecret(CommandContext ctx, params string[] args)
+    {
+      
+      await Reply(ctx, "[ This will be added soon. ]");
     }
 
     [Command("remove")]
     public async Task Remove(CommandContext ctx, params string[] args)
     {
-      string message;
-
       if (s_CurrentPool == null || s_CurrentPool.m_Counts.Count == 0)
       {
-        message = "[gzzgwoooo]";
+        await Reply(ctx, "[ You can't remove dice from an empty pool. ]");
+        await Play(ctx, PickRandom(s_ErrorSounds));
       }
       else
       {
+        var removals = 0;
+
         foreach (var arg in args)
+        {
           if (s_DiceByString.ContainsKey(arg))
+          {
             s_CurrentPool.Remove(s_DiceByString[arg]);
+            ++removals;
+          }
+          else
+          {
+            foreach (var ch in arg)
+            {
+              var str = ch.ToString();
+              if (s_DiceByString.ContainsKey(str))
+              {
+                s_CurrentPool.Remove(s_DiceByString[str]);
+                ++removals;
+              }
+            }
+          }
+        }
 
-        var emojiString = s_CurrentPool.GetSortedEmojiString();
-        message = string.IsNullOrEmpty(emojiString) ? "[plibt]" : "[gzweeg " + emojiString + "]";
+        if (removals == 0)
+        {
+          await Reply(ctx, "[ Please specify one or more dice to remove. ]");
+          await Play(ctx, PickRandom(s_ErrorSounds));
+        }
+        else
+        {
+          var emojiString = s_CurrentPool.GetSortedEmojiString();
+
+          if (string.IsNullOrEmpty(emojiString))
+            await Reply(ctx, "[ The pool is now empty. ]");
+          else
+            await Reply(ctx, $"[ The pool now contains {emojiString}. ]");
+          await Play(ctx, PickRandom(s_CommandSounds));
+        }
       }
-
-      await Reply(ctx, message);
     }
 
     [Command("clear")]
     public async Task Clear(CommandContext ctx)
     {
-      s_CurrentPool = new FfgDie.Pool();
-      await Reply(ctx, "[weeboo weeboo wzzp]");
+      if (s_CurrentPool == null || s_CurrentPool.m_Counts.Count == 0)
+      {
+        await Reply(ctx, "[ The pool was already empty. ]");
+        await Play(ctx, PickRandom(s_ErrorSounds));
+      }
+      else
+      {
+        s_CurrentPool = new FfgDie.Pool();
+        await Reply(ctx, "[ The pool is now empty. ]");
+        await Play(ctx, PickRandom(s_CommandSounds));
+      }
     }
 
     [Command("roll")]
@@ -178,59 +397,214 @@ namespace R2D20
       {
         pool = new FfgDie.Pool();
         foreach (var arg in args)
+        {
           if (s_DiceByString.ContainsKey(arg))
+          {
             pool.Add(s_DiceByString[arg]);
+          }
+          else
+          {
+            foreach (var ch in arg)
+            {
+              var str = ch.ToString();
+              if (s_DiceByString.ContainsKey(str))
+              {
+                pool.Add(s_DiceByString[str]);
+              }
+            }
+          }
+        }
       }
 
       if (pool.m_Counts.Count == 0)
       {
-        await Reply(ctx, "[bzzzp woop]");
+        if (args.Length == 0)
+          await Reply(ctx, "[ You can't roll an empty pool. ]");
+        else
+          await Reply(ctx, "[ I didn't understand what you tried to roll. ]");
+        await Play(ctx, PickRandom(s_ErrorSounds));
       }
       else
       {
         var result = pool.Roll();
-        var keysList = result.m_Result.Keys.ToList();
-        keysList.Sort();
+        var outcomeSymbols = result.m_Result.Keys.ToList();
+        outcomeSymbols.Sort();
 
-        string message = "[ ";
-        var resultMessage = string.Empty;
+        var resultString = string.Empty;
 
-        foreach (var key in keysList)
+        foreach (var outcomeSymbol in outcomeSymbols)
         {
-          var count = result.m_Result[key];
+          var count = result.m_Result[outcomeSymbol];
           for (var i = 0; i < count; ++i)
           {
-            var symbolEmoji = FfgDie.s_SymbolEmoji[key];
-            resultMessage += symbolEmoji;
+            var symbolEmoji = FfgDie.s_SymbolEmoji[outcomeSymbol];
+            resultString += symbolEmoji;
           }
         }
 
-        if (resultMessage == string.Empty)
-          resultMessage = FfgDie.s_SymbolEmoji[FfgDie.Symbol.None];
+        string outcomeString;
 
-        message += resultMessage + " **|** ";
-
-        message += pool.GetSortedEmojiString() + "**:** ";
-
-        foreach (var symbol in result.m_SymbolList)
+        if (string.IsNullOrEmpty(resultString))
         {
-          var symbolEmoji = FfgDie.s_SymbolEmoji[symbol];
-          message += symbolEmoji;
+          resultString = FfgDie.s_SymbolEmoji[FfgDie.Symbol.None];
+          outcomeString = "It's a **Wash**";
+        }
+        else
+        {
+          var successString = string.Empty;
+          var advantageString = string.Empty;
+          var forceString = string.Empty;
+          var triumphString = string.Empty;
+          var despairString = string.Empty;
+
+          if (result.m_SuccessStatus == FfgDie.Pool.RollResult.SuccessStatus.Success)
+            successString = "**Success**";
+          else if (result.m_SuccessStatus == FfgDie.Pool.RollResult.SuccessStatus.Failure)
+            successString = "**Failure**";
+
+          if (result.m_AdvantageStatus == FfgDie.Pool.RollResult.AdvantageStatus.Advantage)
+            advantageString = "**Advantage**";
+          else if (result.m_AdvantageStatus == FfgDie.Pool.RollResult.AdvantageStatus.Threat)
+            advantageString = "**Threat**";
+
+          if (result.m_ForceStatus == FfgDie.Pool.RollResult.ForceStatus.Light ||
+            result.m_ForceStatus == FfgDie.Pool.RollResult.ForceStatus.Dark)
+            forceString = "**Disturbance in the Force**";
+          else if (result.m_ForceStatus == FfgDie.Pool.RollResult.ForceStatus.DoubleLight ||
+            result.m_ForceStatus == FfgDie.Pool.RollResult.ForceStatus.DoubleDark)
+            forceString = "**Great Disturbance in the Force**";
+
+          if (result.m_Triumph)
+            triumphString = "**Triumph**";
+          if (result.m_Despair)
+            despairString = "**Despair**";
+
+          outcomeString = successString;
+
+          var noOutcome = string.IsNullOrEmpty(outcomeString);
+          var noAdvantage = string.IsNullOrEmpty(advantageString);
+          var noTriumph = string.IsNullOrEmpty(triumphString);
+          var noDespair = string.IsNullOrEmpty(despairString);
+          var noForce = string.IsNullOrEmpty(forceString);
+
+          if (!noOutcome && !(noAdvantage && noTriumph && noDespair))
+            outcomeString += " with ";
+
+          outcomeString += advantageString;
+
+          if (!noAdvantage && !(noTriumph && noDespair))
+            outcomeString += " and ";
+
+          outcomeString += triumphString;
+
+          if (!noTriumph && !noDespair)
+            outcomeString += " and ";
+
+          outcomeString += despairString;
+
+          if (!noForce)
+            if (string.IsNullOrEmpty(outcomeString))
+              outcomeString = $"A {forceString}";
+            else
+              outcomeString += $"... and a {forceString}";
         }
 
-        message += " ]";
+        var line0 = $"[ {resultString} \u2014 {outcomeString} ]";
+        var line1 = string.Empty;
+
+        foreach (var dieResult in result.m_DieList)
+          line1 += dieResult;
+
+        var message = $"{line0}{Environment.NewLine}{line1}";
+
+        string soundName;
+
+        if (result.m_Triumph && result.m_Despair)
+        {
+          soundName = PickRandom(s_ChaosSounds);
+        }
+        else if (result.m_Triumph)
+        {
+          if (result.m_SuccessStatus == FfgDie.Pool.RollResult.SuccessStatus.Success ||
+            result.m_SuccessStatus == FfgDie.Pool.RollResult.SuccessStatus.Nothing)
+          {
+            soundName = PickRandom(s_VeryHappySounds);
+          }
+          else
+          {
+            soundName = PickRandom(s_UnsureSounds);
+          }
+        }
+        else if (result.m_Despair)
+        {
+          if (result.m_SuccessStatus == FfgDie.Pool.RollResult.SuccessStatus.Failure ||
+            result.m_SuccessStatus == FfgDie.Pool.RollResult.SuccessStatus.Nothing)
+          {
+            soundName = PickRandom(s_VeryUpsetSounds);
+          }
+          else
+          {
+            soundName = PickRandom(s_UnsureSounds);
+          }
+        }
+        else if (result.m_SuccessStatus == FfgDie.Pool.RollResult.SuccessStatus.Success)
+          soundName = PickRandom(s_HappySounds);
+        else if (result.m_SuccessStatus == FfgDie.Pool.RollResult.SuccessStatus.Failure)
+          soundName = PickRandom(s_UpsetSounds);
+        else if (result.m_AdvantageStatus == FfgDie.Pool.RollResult.AdvantageStatus.Advantage)
+          soundName = PickRandom(s_KindaHappySounds);
+        else if (result.m_AdvantageStatus == FfgDie.Pool.RollResult.AdvantageStatus.Threat)
+          soundName = PickRandom(s_KindaUpsetSounds);
+        else
+          soundName = PickRandom(s_UnsureSounds);
 
         await Reply(ctx, message);
+        await Play(ctx, soundName);
+
+        if (result.m_ForceStatus == FfgDie.Pool.RollResult.ForceStatus.Light)
+          await Play(ctx, "light");
+        else if (result.m_ForceStatus == FfgDie.Pool.RollResult.ForceStatus.DoubleLight)
+          await Play(ctx, "doublelight");
+        else if (result.m_ForceStatus == FfgDie.Pool.RollResult.ForceStatus.Dark)
+          await Play(ctx, "dark");
+        else if (result.m_ForceStatus == FfgDie.Pool.RollResult.ForceStatus.DoubleDark)
+          await Play(ctx, "doubledark");
       }
     }
 
-    private string AddHelper(string[] args)
+    private async Task AddHelper(CommandContext ctx, string[] args)
     {
       foreach (var arg in args)
+      {
         if (s_DiceByString.ContainsKey(arg))
+        {
           s_CurrentPool.Add(s_DiceByString[arg]);
+        }
+        else
+        {
+          foreach (var ch in arg)
+          {
+            var str = ch.ToString();
+            if (s_DiceByString.ContainsKey(str))
+            {
+              s_CurrentPool.Add(s_DiceByString[str]);
+            }
+          }
+        }
+      }
 
-      return s_CurrentPool.GetSortedEmojiString();
+      var emojiString = s_CurrentPool.GetSortedEmojiString();
+
+      if (string.IsNullOrEmpty(emojiString))
+      {
+        await Reply(ctx, "[ Please specify one or more dice to add. ]");
+        await Play(ctx, PickRandom(s_ErrorSounds));
+      }
+      else
+      {
+        await Reply(ctx, $"[ The pool now contains {emojiString}. ]");
+        await Play(ctx, PickRandom(s_CommandSounds));
+      }
     }
 
     private string Roll(uint die)
@@ -275,9 +649,16 @@ namespace R2D20
 
     private async Task Reply(CommandContext ctx, string message)
     {
-      var mention = ctx.Member.Mention;
-      message = mention + " \u2014 " + message;
+      var member = ctx.Member;
+      if (member != null)
+        message = member.Mention + " \u2014 " + message;
+      
       await ctx.Message.RespondAsync(message).ConfigureAwait(false);
+    }
+
+    private T PickRandom<T>(List<T> list)
+    {
+      return list[Bot.s_RNG.Next(0, list.Count)];
     }
   }
 }

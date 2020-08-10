@@ -10,7 +10,8 @@
         "dependencies": {
           "DSharpPlus": "4.0.0-nightly-00711",
           "DSharpPlus.CommandsNext": "4.0.0-nightly-00711",
-          "DSharpPlus.Interactivity": "4.0.0-nightly-00711"
+          "DSharpPlus.Interactivity": "4.0.0-nightly-00711",
+          "DSharpPlus.VoiceNext": "4.0.0-nightly-00711"
         },
         "runtime": {
           "R2-D20.dll": {}
@@ -52,6 +53,42 @@
           "lib/netstandard2.0/DSharpPlus.Interactivity.dll": {
             "assemblyVersion": "4.0.0.711",
             "fileVersion": "4.0.0.711"
+          }
+        }
+      },
+      "DSharpPlus.VoiceNext/4.0.0-nightly-00711": {
+        "dependencies": {
+          "DSharpPlus": "4.0.0-nightly-00711",
+          "DSharpPlus.VoiceNext.Natives": "1.0.0"
+        },
+        "runtime": {
+          "lib/netstandard2.0/DSharpPlus.VoiceNext.dll": {
+            "assemblyVersion": "4.0.0.711",
+            "fileVersion": "4.0.0.711"
+          }
+        }
+      },
+      "DSharpPlus.VoiceNext.Natives/1.0.0": {
+        "runtimeTargets": {
+          "runtimes/win-x64/native/libopus.dll": {
+            "rid": "win-x64",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/win-x64/native/libsodium.dll": {
+            "rid": "win-x64",
+            "assetType": "native",
+            "fileVersion": "1.0.18.0"
+          },
+          "runtimes/win-x86/native/libopus.dll": {
+            "rid": "win-x86",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/win-x86/native/libsodium.dll": {
+            "rid": "win-x86",
+            "assetType": "native",
+            "fileVersion": "1.0.18.0"
           }
         }
       },
@@ -696,6 +733,20 @@
       "sha512": "sha512-wyvI3tPV0q7XIhcQ3VuMwKtihAdnpPR63sewu9wTHLR6Bu/NmojVTb6vNql6fDW02fAV9rL7vLvbbwI3JxbNMg==",
       "path": "dsharpplus.interactivity/4.0.0-nightly-00711",
       "hashPath": "dsharpplus.interactivity.4.0.0-nightly-00711.nupkg.sha512"
+    },
+    "DSharpPlus.VoiceNext/4.0.0-nightly-00711": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-mCepzLJksXNLA2kStXwurtVaVl0AZIvk6mUo+WC58bCWNjeew9x+RfPJIPN68QjIA/q+P6G8i5r6AFkMoPq9/A==",
+      "path": "dsharpplus.voicenext/4.0.0-nightly-00711",
+      "hashPath": "dsharpplus.voicenext.4.0.0-nightly-00711.nupkg.sha512"
+    },
+    "DSharpPlus.VoiceNext.Natives/1.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-U+UtMpommsfh+OOgLYQBy1e+53P/q6/LW18bgIJqsyshhThhiyEH8ISnpESdQrcqEDj6Nud7+FbnNi7N4QtDGw==",
+      "path": "dsharpplus.voicenext.natives/1.0.0",
+      "hashPath": "dsharpplus.voicenext.natives.1.0.0.nupkg.sha512"
     },
     "Microsoft.Extensions.DependencyInjection/3.1.1": {
       "type": "package",

@@ -1,9 +1,9 @@
 ﻿using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.EventArgs;
+using DSharpPlus.VoiceNext;
 using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,6 +16,7 @@ namespace R2D20
 
     public DiscordClient m_Client { get; private set; }
     public CommandsNextExtension m_Commands { get; private set; }
+    public VoiceNextExtension m_Voice { get; private set; }
 
     public async Task RunAsync()
     {
@@ -32,11 +33,12 @@ namespace R2D20
         Token = configJson.Token,
         TokenType = TokenType.Bot,
         AutoReconnect = true,
-        LogLevel = LogLevel.Info,
+        LogLevel = LogLevel.Debug,
         UseInternalLogHandler = true,
       };
 
       m_Client = new DiscordClient(config);
+      m_Client.UseVoiceNext();
 
       m_Client.Ready += OnClientReady;
 
@@ -44,7 +46,7 @@ namespace R2D20
       {
         StringPrefixes = new string[] { configJson.Prefix },
         EnableMentionPrefix = true,
-        EnableDms = false,  // maybe change this to allow commands via PM
+        EnableDms = true,  // maybe change this to allow commands via PM
         DmHelp = true,
         IgnoreExtraArguments = true,
       };

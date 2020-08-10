@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace R2D20
+﻿namespace R2D20
 {
   class Program
   {

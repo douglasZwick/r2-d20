@@ -1,12 +1,14 @@
 {
   "version": 2,
-  "dgSpecHash": "K6d8Ou+ydBYSQRLyB37CuNej7YIx0rlceWfsEPeabxq72vZLbYaTD/TH6XquVSXSPFseUlwOgzUT/nB4AcX1ig==",
+  "dgSpecHash": "Dxc9ATk1Tohoj9vxsje37Lp2xcVfY9UyFYNAQ7nKVT3UgPB/eBVCe7YKpeRtz0+6muOmQdQNZjwNDRD1nvBU8g==",
   "success": true,
   "projectFilePath": "D:\\Modus Ponens\\Projects\\r2-d20\\R2-D20\\R2-D20.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Modus Ponens\\.nuget\\packages\\dsharpplus\\4.0.0-nightly-00711\\dsharpplus.4.0.0-nightly-00711.nupkg.sha512",
     "C:\\Users\\Modus Ponens\\.nuget\\packages\\dsharpplus.commandsnext\\4.0.0-nightly-00711\\dsharpplus.commandsnext.4.0.0-nightly-00711.nupkg.sha512",
     "C:\\Users\\Modus Ponens\\.nuget\\packages\\dsharpplus.interactivity\\4.0.0-nightly-00711\\dsharpplus.interactivity.4.0.0-nightly-00711.nupkg.sha512",
+    "C:\\Users\\Modus Ponens\\.nuget\\packages\\dsharpplus.voicenext\\4.0.0-nightly-00711\\dsharpplus.voicenext.4.0.0-nightly-00711.nupkg.sha512",
+    "C:\\Users\\Modus Ponens\\.nuget\\packages\\dsharpplus.voicenext.natives\\1.0.0\\dsharpplus.voicenext.natives.1.0.0.nupkg.sha512",
     "C:\\Users\\Modus Ponens\\.nuget\\packages\\microsoft.extensions.dependencyinjection\\3.1.1\\microsoft.extensions.dependencyinjection.3.1.1.nupkg.sha512",
     "C:\\Users\\Modus Ponens\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\3.1.1\\microsoft.extensions.dependencyinjection.abstractions.3.1.1.nupkg.sha512",
     "C:\\Users\\Modus Ponens\\.nuget\\packages\\microsoft.netcore.platforms\\1.1.1\\microsoft.netcore.platforms.1.1.1.nupkg.sha512",

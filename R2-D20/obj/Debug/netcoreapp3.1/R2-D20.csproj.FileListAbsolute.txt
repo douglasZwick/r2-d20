@@ -16,5 +16,10 @@ D:\Modus Ponens\Projects\r2-d20\R2-D20\bin\Debug\netcoreapp3.1\DSharpPlus.Comman
 D:\Modus Ponens\Projects\r2-d20\R2-D20\bin\Debug\netcoreapp3.1\Microsoft.Extensions.DependencyInjection.dll
 D:\Modus Ponens\Projects\r2-d20\R2-D20\bin\Debug\netcoreapp3.1\Microsoft.Extensions.DependencyInjection.Abstractions.dll
 D:\Modus Ponens\Projects\r2-d20\R2-D20\bin\Debug\netcoreapp3.1\DSharpPlus.Interactivity.dll
-D:\Modus Ponens\Projects\r2-d20\R2-D20\obj\Debug\netcoreapp3.1\R2-D20.csproj.CoreCompileInputs.cache
 D:\Modus Ponens\Projects\r2-d20\R2-D20\obj\Debug\netcoreapp3.1\R2-D20.csprojAssemblyReference.cache
+D:\Modus Ponens\Projects\r2-d20\R2-D20\bin\Debug\netcoreapp3.1\DSharpPlus.VoiceNext.dll
+D:\Modus Ponens\Projects\r2-d20\R2-D20\bin\Debug\netcoreapp3.1\runtimes\win-x64\native\libopus.dll
+D:\Modus Ponens\Projects\r2-d20\R2-D20\bin\Debug\netcoreapp3.1\runtimes\win-x64\native\libsodium.dll
+D:\Modus Ponens\Projects\r2-d20\R2-D20\bin\Debug\netcoreapp3.1\runtimes\win-x86\native\libopus.dll
+D:\Modus Ponens\Projects\r2-d20\R2-D20\bin\Debug\netcoreapp3.1\runtimes\win-x86\native\libsodium.dll
+D:\Modus Ponens\Projects\r2-d20\R2-D20\obj\Debug\netcoreapp3.1\R2-D20.csproj.CoreCompileInputs.cache
