@@ -1,8 +1,0 @@
-{
-  "runtimeOptions": {
-    "additionalProbingPaths": [
-      "C:\\Users\\Modus Ponens\\.dotnet\\store\\|arch|\\|tfm|",
-      "C:\\Users\\Modus Ponens\\.nuget\\packages"
-    ]
-  }
-}

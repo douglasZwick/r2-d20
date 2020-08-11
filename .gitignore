@@ -1,1 +1,4 @@
-R2-D20/bin/Debug/netcoreapp3.1/config.json
+R2-D20/.vs
+R2-D20/obj
+R2-D20/bin
+!R2-D20/bin/Debug/netcoreapp3.1/audio

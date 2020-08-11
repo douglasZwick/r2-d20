@@ -1,10 +1,13 @@
 ﻿using DSharpPlus;
 using DSharpPlus.CommandsNext;
+using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.VoiceNext;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -56,7 +59,6 @@ namespace R2D20
       m_Commands.RegisterCommands<R2Command>();
 
       await m_Client.ConnectAsync();
-
       await Task.Delay(-1);
     }
 

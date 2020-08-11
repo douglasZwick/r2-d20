@@ -313,8 +313,7 @@ namespace R2D20
     [Command("addsecret")]
     public async Task AddSecret(CommandContext ctx, params string[] args)
     {
-      
-      await Reply(ctx, "[ This will be added soon. ]");
+      await Reply(ctx, "[ This feature will be added soon. ]");
     }
 
     [Command("remove")]
@@ -640,6 +639,31 @@ namespace R2D20
       }
 
       return $"[beep boop **{total}** :{rollString}]";
+    }
+
+    private bool RoleCheck(CommandContext ctx, string roleName)
+    {
+      var guilds = ctx.Client.Guilds.Values.ToList();
+      var authorId = ctx.Message.Author.Id;
+      var roleFound = false;
+      foreach (var guild in guilds)
+      {
+        if (guild.Members.ContainsKey(authorId))
+        {
+          var member = guild.Members[authorId];
+          var roles = member.Roles;
+          foreach (var role in roles)
+          {
+            if (role.Name == roleName)
+            {
+              roleFound = true;
+              break;
+            }
+          }
+        }
+      }
+
+      return roleFound;
     }
 
     private async Task Say(CommandContext ctx, string message)
