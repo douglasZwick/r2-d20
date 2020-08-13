@@ -6,3 +6,6 @@ R2-D20/bin/Debug/*
 !R2-D20/bin/Debug/netcoreapp3.1
 R2-D20/bin/Debug/netcoreapp3.1/*
 !R2-D20/bin/Debug/netcoreapp3.1/audio
+R2-D20/Backup
+R2-D20/R2-D20.csproj.user
+R2-D20/UpgradeLog.htm
