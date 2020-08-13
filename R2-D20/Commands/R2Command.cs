@@ -638,7 +638,8 @@ namespace R2D20
         else if (result.m_AdvantageStatus == FfgDie.Pool.RollResult.AdvantageStatus.Threat)
           soundName = PickRandom(s_KindaUpsetSounds);
         else
-          soundName = PickRandom(s_UnsureSounds);
+          soundName = "bup";
+          //soundName = PickRandom(s_UnsureSounds);
 
         await Reply(ctx, message);
         await Play(ctx, soundName);
