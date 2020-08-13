@@ -114,12 +114,27 @@ namespace R2D20
       "cheerful",
       "look",
       "playful",
+      "meepwalla",
     };
 
     public static List<string> s_ErrorSounds = new List<string>()
     {
       "snappy",
       "unsure",
+    };
+
+    public static Dictionary<string, List<string>> s_Emotions = new Dictionary<string, List<string>>()
+    {
+      { "veryhappy", s_VeryHappySounds },
+      { "happy", s_HappySounds },
+      { "kindahappy", s_KindaHappySounds },
+      { "veryupset", s_VeryUpsetSounds },
+      { "upset", s_UpsetSounds },
+      { "kindaupset", s_KindaUpsetSounds },
+      { "unsure", s_UnsureSounds },
+      { "chaos", s_ChaosSounds },
+      { "command", s_CommandSounds },
+      { "error", s_ErrorSounds },
     };
 
     public static FfgDie.Pool s_CurrentPool = new FfgDie.Pool();
@@ -238,6 +253,17 @@ namespace R2D20
       await voiceNextConnection.WaitForPlaybackFinishAsync();
     }
 
+    [Command("emote")]
+    public async Task Emote(CommandContext ctx, [RemainingText] string emotion)
+    {
+      emotion = emotion.ToLower().Trim();
+      if (s_Emotions.ContainsKey(emotion))
+      {
+        var soundName = PickRandom(s_Emotions[emotion]);
+        await Play(ctx, soundName);
+      }
+    }
+
     [Command("soundlist")]
     public async Task SoundList(CommandContext ctx)
     {
@@ -245,9 +271,20 @@ namespace R2D20
       var message = "[ Here are the sounds that I can play: ]";
 
       foreach (var name in names)
-      {
         message += $"{Environment.NewLine}• {Path.GetFileNameWithoutExtension(name)}";
-      }
+ 
+      await Reply(ctx, message);
+      await Play(ctx, PickRandom(s_CommandSounds));
+    }
+
+    [Command("emotelist")]
+    public async Task EmoteList(CommandContext ctx)
+    {
+      var emotions = s_Emotions.Keys;
+      var message = "[ Here are the emotions I can convey via sound: ]";
+
+      foreach (var emotion in emotions)
+        message += $"{Environment.NewLine}• {emotion}";
 
       await Reply(ctx, message);
       await Play(ctx, PickRandom(s_CommandSounds));
@@ -386,6 +423,23 @@ namespace R2D20
     [Command("roll")]
     public async Task Roll(CommandContext ctx, params string[] args)
     {
+      await RollHelper(ctx, FfgDie.RollType.Normal, args);
+    }
+
+    [Command("rollbest")]
+    public async Task RollBest(CommandContext ctx, params string[] args)
+    {
+      await RollHelper(ctx, FfgDie.RollType.Best, args);
+    }
+
+    [Command("rollworst")]
+    public async Task RollWorst(CommandContext ctx, params string[] args)
+    {
+      await RollHelper(ctx, FfgDie.RollType.Worst, args);
+    }
+
+    private async Task RollHelper(CommandContext ctx, FfgDie.RollType rollType, string[] args)
+    {
       FfgDie.Pool pool;
 
       if (args.Length == 0)
@@ -425,7 +479,21 @@ namespace R2D20
       }
       else
       {
-        var result = pool.Roll();
+        FfgDie.Pool.RollResult result;
+
+        switch (rollType)
+        {
+          default: // normal
+            result = pool.Roll();
+            break;
+          case FfgDie.RollType.Best:
+            result = pool.RollBest();
+            break;
+          case FfgDie.RollType.Worst:
+            result = pool.RollWorst();
+            break;
+        }
+
         var outcomeSymbols = result.m_Result.Keys.ToList();
         outcomeSymbols.Sort();
 
@@ -508,7 +576,22 @@ namespace R2D20
               outcomeString += $"... and a {forceString}";
         }
 
-        var line0 = $"[ {resultString} \u2014 {outcomeString} ]";
+        string rollTypeMessage;
+
+        switch (rollType)
+        {
+          default:
+            rollTypeMessage = string.Empty;
+            break;
+          case FfgDie.RollType.Best:
+            rollTypeMessage = "The **best possible roll** for this pool is ";
+            break;
+          case FfgDie.RollType.Worst:
+            rollTypeMessage = "The **worst possible roll** for this pool is ";
+            break;
+        }
+
+        var line0 = $"[ {rollTypeMessage}{resultString} \u2014 {outcomeString} ]";
         var line1 = string.Empty;
 
         foreach (var dieResult in result.m_DieList)
@@ -568,6 +651,8 @@ namespace R2D20
           await Play(ctx, "dark");
         else if (result.m_ForceStatus == FfgDie.Pool.RollResult.ForceStatus.DoubleDark)
           await Play(ctx, "doubledark");
+
+        s_CurrentPool = new FfgDie.Pool();
       }
     }
 

@@ -16,7 +16,7 @@ namespace R2D20
       Symbol.SuccessAdvantage,
       Symbol.DoubleAdvantage,
       Symbol.Advantage,
-    });
+    }, 3, 0);
     public static FfgDie s_SetbackDie = new FfgDie(new List<Symbol>()
     {
       Symbol.None,
@@ -25,7 +25,7 @@ namespace R2D20
       Symbol.Failure,
       Symbol.Threat,
       Symbol.Threat,
-    });
+    }, 0, 2);
     public static FfgDie s_AbilityDie = new FfgDie(new List<Symbol>()
     {
       Symbol.None,
@@ -36,7 +36,7 @@ namespace R2D20
       Symbol.Advantage,
       Symbol.SuccessAdvantage,
       Symbol.DoubleAdvantage,
-    });
+    }, 3, 0);
     public static FfgDie s_DifficultyDie = new FfgDie(new List<Symbol>()
     {
       Symbol.None,
@@ -47,7 +47,7 @@ namespace R2D20
       Symbol.Threat,
       Symbol.DoubleThreat,
       Symbol.FailureThreat,
-    });
+    }, 0, 2);
     public static FfgDie s_ProficiencyDie = new FfgDie(new List<Symbol>()
     {
       Symbol.None,
@@ -62,7 +62,7 @@ namespace R2D20
       Symbol.DoubleAdvantage,
       Symbol.DoubleAdvantage,
       Symbol.Triumph
-    });
+    }, 11, 0);
     public static FfgDie s_ChallengeDie = new FfgDie(new List<Symbol>()
     {
       Symbol.None,
@@ -77,7 +77,7 @@ namespace R2D20
       Symbol.DoubleThreat,
       Symbol.DoubleThreat,
       Symbol.Despair,
-    });
+    }, 0, 11);
     public static FfgDie s_ForceDie = new FfgDie(new List<Symbol>()
     {
       Symbol.Dark,
@@ -92,7 +92,7 @@ namespace R2D20
       Symbol.DoubleLight,
       Symbol.DoubleLight,
       Symbol.DoubleLight,
-    });
+    }, 9, 6);
 
     public enum Type
     {
@@ -124,6 +124,13 @@ namespace R2D20
       Dark,
       DoubleDark,
       None,
+    }
+
+    public enum RollType
+    {
+      Normal,
+      Best,
+      Worst,
     }
 
     public static Dictionary<Symbol, List<Symbol>> s_SymbolToList = new Dictionary<Symbol, List<Symbol>>()
@@ -428,6 +435,21 @@ namespace R2D20
 
       public RollResult Roll()
       {
+        return RollHelper(RollType.Normal);
+      }
+
+      public RollResult RollBest()
+      {
+        return RollHelper(RollType.Best);
+      }
+
+      public RollResult RollWorst()
+      {
+        return RollHelper(RollType.Worst);
+      }
+
+      private RollResult RollHelper(RollType rollType)
+      {
         var result = new RollResult();
 
         foreach (var entry in m_Counts)
@@ -437,7 +459,21 @@ namespace R2D20
           for (var i = 0; i < entry.Value; ++i)
           {
             var type = s_DieTypeByDie[die];
-            var symbol = die.Roll();
+            Symbol symbol;
+
+            switch (rollType)
+            {
+              default: // normal
+                symbol = die.Roll();
+                break;
+              case RollType.Best:
+                symbol = die.RollBest();
+                break;
+              case RollType.Worst:
+                symbol = die.RollWorst();
+                break;
+            }
+
             result.AddDieResult(type, symbol);
 
             var outcome = s_SymbolToList[symbol];
@@ -454,16 +490,30 @@ namespace R2D20
     }
 
     public List<Symbol> m_Sides { get; private set; }
+    public int m_BestIndex { get; private set; }
+    public int m_WorstIndex { get; private set; }
 
-    public FfgDie(List<Symbol> sides)
+    public FfgDie(List<Symbol> sides, int bestIndex, int worstIndex)
     {
       m_Sides = sides;
+      m_BestIndex = bestIndex;
+      m_WorstIndex = worstIndex;
     }
 
     public Symbol Roll()
     {
       var r = Bot.s_RNG.Next(0, m_Sides.Count);
       return m_Sides[r];
+    }
+
+    public Symbol RollBest()
+    {
+      return m_Sides[m_BestIndex];
+    }
+
+    public Symbol RollWorst()
+    {
+      return m_Sides[m_WorstIndex];
     }
 
     private static void Shuffle<T>(List<T> list)
