@@ -84,18 +84,22 @@ namespace R2D20
     {
       "snappy",
       "surprised",
+      "r2hit",
+      "badmotivator",
     };
 
     public static List<string> s_UpsetSounds = new List<string>()
     {
       "processing",
       "sad",
+      "danger",
     };
 
     public static List<string> s_KindaUpsetSounds = new List<string>()
     {
       "concerned",
       "look",
+      "warning",
     };
 
     public static List<string> s_UnsureSounds = new List<string>()
