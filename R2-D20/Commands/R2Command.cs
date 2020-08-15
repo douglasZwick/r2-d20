@@ -409,6 +409,31 @@ namespace R2D20
       }
     }
 
+    [Command("dicehelp")]
+    public async Task DiceHelp(CommandContext ctx)
+    {
+      string diceHelpString =   "Ability: " + FfgDie.s_DiceEmoji[FfgDie.Type.Ability] +
+                                "\nProficiency: " + FfgDie.s_DiceEmoji[FfgDie.Type.Proficiency] +
+                                "\nBoost: " + FfgDie.s_DiceEmoji[FfgDie.Type.Boost] +
+                                "\nDifficulty: " + FfgDie.s_DiceEmoji[FfgDie.Type.Difficulty] +
+                                "\nChallenge: " + FfgDie.s_DiceEmoji[FfgDie.Type.Challenge] +
+                                "\nSetback: " + FfgDie.s_DiceEmoji[FfgDie.Type.Setback] +
+                                "\nForce: " + FfgDie.s_DiceEmoji[FfgDie.Type.Force];
+      await Say(ctx, diceHelpString);
+    }
+    
+    [Command("symbolhelp")]
+    public async Task SymbolHelp(CommandContext ctx)
+    {
+      string diceHelpString =   "Success: " + FfgDie.s_SymbolEmoji[FfgDie.Symbol.Success] +
+                                "\nFailure: " + FfgDie.s_SymbolEmoji[FfgDie.Symbol.Failure] +
+                                "\nAdvantage: " + FfgDie.s_SymbolEmoji[FfgDie.Symbol.Advantage] +
+                                "\nThreat: " + FfgDie.s_SymbolEmoji[FfgDie.Symbol.Threat] +
+                                "\nTriumph: " + FfgDie.s_SymbolEmoji[FfgDie.Symbol.Triumph] +
+                                "\nDespair: " + FfgDie.s_SymbolEmoji[FfgDie.Symbol.Despair];
+      await Say(ctx, diceHelpString);
+    }
+
     [Command("clear")]
     public async Task Clear(CommandContext ctx)
     {
