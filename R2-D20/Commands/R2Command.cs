@@ -78,6 +78,7 @@ namespace R2D20
     {
       "playful",
       "proud",
+      "squeaky"
     };
 
     public static List<string> s_VeryUpsetSounds = new List<string>()
