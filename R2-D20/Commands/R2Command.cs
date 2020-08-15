@@ -468,6 +468,12 @@ namespace R2D20
       await RollHelper(ctx, FfgDie.RollType.Worst, args);
     }
 
+    [Command("friendcodes")]
+    public async Task FriendCodes(CommandContext ctx)
+    {
+
+    }
+
     private async Task RollHelper(CommandContext ctx, FfgDie.RollType rollType, string[] args)
     {
       FfgDie.Pool pool;
@@ -721,6 +727,8 @@ namespace R2D20
         await Play(ctx, PickRandom(s_CommandSounds));
       }
     }
+
+
 
     private string Roll(uint die)
     {
