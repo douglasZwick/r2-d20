@@ -62,70 +62,70 @@ namespace R2D20
 
     public static List<string> s_VeryHappySounds = new List<string>()
     {
-      "excited",
-      "laughing",
-      "unbelievable",
+      "R2.excited",
+      "R2.laughing",
+      "R2.unbelievable",
     };
 
     public static List<string> s_HappySounds = new List<string>()
     {
-      "cheerful",
-      "eureka",
-      "veryexcited",
+      "R2.cheerful",
+      "R2.eureka",
+      "R2.veryexcited",
     };
 
     public static List<string> s_KindaHappySounds = new List<string>()
     {
-      "playful",
-      "proud",
-      "squeaky"
+      "R2.playful",
+      "R2.proud",
+      "R2.squeaky"
     };
 
     public static List<string> s_VeryUpsetSounds = new List<string>()
     {
-      "snappy",
-      "surprised",
-      "r2hit",
-      "badmotivator",
+      "R2.snappy",
+      "R2.surprised",
+      "R2.hit",
+      "R2.badmotivator",
     };
 
     public static List<string> s_UpsetSounds = new List<string>()
     {
-      "processing",
-      "sad",
-      "danger",
+      "R2.processing",
+      "R2.sad",
+      "R2.danger",
     };
 
     public static List<string> s_KindaUpsetSounds = new List<string>()
     {
-      "concerned",
-      "look",
-      "warning",
+      "R2.concerned",
+      "R2.look",
+      "R2.warning",
     };
 
     public static List<string> s_UnsureSounds = new List<string>()
     {
-      "unsure",
-      "determined",
+      "R2.unsure",
+      "R2.determined",
     };
 
     public static List<string> s_ChaosSounds = new List<string>()
     {
-      "shocked",
+      "R2.shocked",
     };
 
     public static List<string> s_CommandSounds = new List<string>()
     {
-      "cheerful",
-      "look",
-      "playful",
-      "meepwalla",
+      "R2.cheerful",
+      "R2.look",
+      "R2.playful",
+      "R2.meepwalla",
     };
 
     public static List<string> s_ErrorSounds = new List<string>()
     {
-      "snappy",
-      "unsure",
+      "R2.snappy",
+      "R2.unsure",
     };
 
     public static Dictionary<string, List<string>> s_Emotions = new Dictionary<string, List<string>>()
@@ -273,13 +273,54 @@ namespace R2D20
     public async Task SoundList(CommandContext ctx)
     {
       var names = Directory.GetFiles("audio");
-      var message = "[ Here are the sounds that I can play: ]";
-
+      string _description = "";
       foreach (var name in names)
-        message += $"{Environment.NewLine}• {Path.GetFileNameWithoutExtension(name)}";
- 
-      await Reply(ctx, message);
-      await Play(ctx, PickRandom(s_CommandSounds));
+      {
+        if(Path.GetFileNameWithoutExtension(name).StartsWith("music."))
+        {
+          continue;
+        }
+        _description += Formatter.InlineCode(Path.GetFileNameWithoutExtension(name));
+        _description += ", ";
+      }
+
+      _description = _description.Remove(_description.Length -2);
+
+      var _embed = new DiscordEmbedBuilder
+      {
+        Title = "[ Here are the sounds that I can play: ]",
+        Description = _description
+      };
+      await ctx.RespondAsync(embed: _embed);
+    }
+
+    [Command("musiclist")]
+    public async Task MusicList(CommandContext ctx)
+    {
+      var names = Directory.GetFiles("audio");
+      string _description = "";
+      foreach (var name in names)
+      {
+        if(!Path.GetFileNameWithoutExtension(name).StartsWith("music."))
+        {
+          continue;
+        }
+        _description += Formatter.InlineCode(Path.GetFileNameWithoutExtension(name));
+        if(name != names.Last())
+        _description += ", ";
+      }
+      
+      if(_description.EndsWith(", "))
+      {
+        _description = _description.Remove(_description.Length - 2);
+      }
+
+      var _embed = new DiscordEmbedBuilder
+      {
+        Title = "[ Here is the music that I can play: ]",
+        Description = _description
+      };
+      await ctx.RespondAsync(embed: _embed);
     }
 
     [Command("emotelist")]
@@ -287,12 +328,23 @@ namespace R2D20
     {
       var emotions = s_Emotions.Keys;
       var message = "[ Here are the emotions I can convey via sound: ]";
+      var _description = "";
 
       foreach (var emotion in emotions)
-        message += $"{Environment.NewLine}• {emotion}";
+      {
+        _description += Formatter.InlineCode(emotion.ToString());
+        if(emotion != emotions.Last())
+        {
+          _description += ", ";
+        }
+      }
 
-      await Reply(ctx, message);
-      await Play(ctx, PickRandom(s_CommandSounds));
+      var _embed = new DiscordEmbedBuilder
+      {
+        Title = message,
+        Description = _description
+      };
+      await ctx.RespondAsync(embed: _embed);
     }
 
     [Command("rolln")]
