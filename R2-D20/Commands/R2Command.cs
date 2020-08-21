@@ -347,6 +347,64 @@ namespace R2D20
       await ctx.RespondAsync(embed: _embed);
     }
 
+    //[Command("fcregister")]
+    public async Task RegisterFriendCode(CommandContext ctx)
+    {
+      string path = $"data{Path.DirectorySeparatorChar}friendcodes.txt";
+      using (StreamWriter sw = File.CreateText(path))
+      {
+        using (StreamReader sr = File.OpenText(path))
+        {
+          if(!File.Exists(path))
+          {
+            sw.WriteLine("-= Switch Friend Codes =-\n");
+          }
+
+          string fileString = sr.ReadToEnd();
+
+          /*if(fileString.Contains(ctx.Member.DisplayName))
+          {
+            await Reply(ctx, "MY DICKKK");
+            Console.WriteLine("MY DICKKK");
+          }
+          else*/
+          {
+            string friendCode = ctx.Message.Content.Remove(0, 12);
+            sw.WriteLine(ctx.Member.DisplayName + ": " + friendCode);
+            await Reply(ctx, "Switch Friend Code has been registered.");
+          }
+        }
+      }
+    }
+    
+    [Command("fclist")]
+    public async Task ListFriendCodes(CommandContext ctx)
+    {
+      string path = $"data{Path.DirectorySeparatorChar}friendcodes.txt";
+      using (StreamReader sr = File.OpenText(path))
+      {
+        if(!File.Exists(path))
+        {
+          await Reply(ctx, "Error: No friend code data file found.");
+        }
+        string _title = "Bean Town Switch Friend Codes";
+        string _description = "";
+        string[] s;
+        string s1;
+        while ((s1 = sr.ReadLine()) != null)
+        {
+          s = s1.Split(": ");
+          _description += $"{s[0]}: {Formatter.InlineCode(s[1])}\n";
+        }
+        var _embed = new DiscordEmbedBuilder
+        {
+          Title = _title,
+          Description = _description
+        };
+        await ctx.RespondAsync(embed: _embed);
+      }
+    }
+
     [Command("rolln")]
     public async Task RollN(CommandContext ctx, string diceString)
     {
