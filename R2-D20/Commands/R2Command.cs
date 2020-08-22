@@ -271,26 +271,69 @@ namespace R2D20
     }
 
     [Command("soundlist")]
-    public async Task SoundList(CommandContext ctx)
+    public async Task SoundList(CommandContext ctx, [RemainingText] string prefix)
     {
-      var names = Directory.GetFiles("audio");
-      string _description = "";
+      var prefixSpecified = !string.IsNullOrEmpty(prefix);
+
+      var pathsArray = Directory.GetFiles("audio");
+      var names = new List<string>();
+      foreach (var path in pathsArray)
+        names.Add(Path.GetFileNameWithoutExtension(path));
+
+      if (prefixSpecified)
+      {
+        var prefixUpper = prefix.ToUpper();
+        names = names.Where(path => path.ToUpper().StartsWith(prefixUpper)).ToList();
+      }
+
+      string description = "";
+
+      var currentHeader = "A";
+      var alreadyPrintedHeader = false;
+      var stillOnFirstItem = true;
+
       foreach (var name in names)
       {
-        if(Path.GetFileNameWithoutExtension(name).StartsWith("music."))
+        if(name.StartsWith("music."))
         {
           continue;
         }
-        _description += Formatter.InlineCode(Path.GetFileNameWithoutExtension(name));
-        _description += ", ";
+
+        if (!prefixSpecified)
+        {
+          var nameUpper = name.ToUpper();
+          if (!nameUpper.StartsWith(currentHeader))
+          {
+            currentHeader = nameUpper.First().ToString();
+            alreadyPrintedHeader = false;
+          }
+
+          if (!alreadyPrintedHeader)
+          {
+            alreadyPrintedHeader = true;
+
+            if (!stillOnFirstItem)
+              description += Environment.NewLine;
+
+            description += $"{Formatter.Bold(currentHeader)} ";
+          }
+        }
+
+        description += $"{Formatter.InlineCode(name)} ";
+
+        stillOnFirstItem = false;
       }
 
-      _description = _description.Remove(_description.Length -2);
+      string title;
+      if (prefixSpecified)
+        title = $"[ Here are the sounds that I can play starting with {prefix}: ]";
+      else
+        title = "[ Here are the sounds that I can play: ]";
 
       var _embed = new DiscordEmbedBuilder
       {
-        Title = "[ Here are the sounds that I can play: ]",
-        Description = _description
+        Title = title,
+        Description = description,
       };
       await ctx.RespondAsync(embed: _embed);
     }
