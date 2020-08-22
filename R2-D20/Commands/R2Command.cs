@@ -256,6 +256,7 @@ namespace R2D20
       await stream.FlushAsync();
 
       await voiceNextConnection.WaitForPlaybackFinishAsync();
+      await ctx.Message.DeleteAsync();
     }
 
     [Command("emote")]
@@ -582,7 +583,7 @@ namespace R2D20
     [Command("friendcodes")]
     public async Task FriendCodes(CommandContext ctx)
     {
-
+      await Task.CompletedTask;
     }
 
     private async Task RollHelper(CommandContext ctx, FfgDie.RollType rollType, string[] args)
