@@ -401,6 +401,7 @@ namespace R2D20
           Title = _title,
           Description = _description
         };
+        await Play(ctx, PickRandom(s_CommandSounds));
         await ctx.RespondAsync(embed: _embed);
       }
     }
