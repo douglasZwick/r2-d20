@@ -275,7 +275,8 @@ namespace R2D20
       if (s_AutoSoundTriggers.ContainsKey(tuple))
       {
         await Task.Delay(s_AutoSoundDelay);
-        await Play(ctx, s_AutoSoundTriggers[tuple]);
+        var message = $"!play {s_AutoSoundTriggers[tuple]}";
+        await ctx.Channel.SendMessageAsync(message).ConfigureAwait(false);
       }
     }
 
