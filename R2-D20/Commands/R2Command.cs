@@ -313,7 +313,7 @@ namespace R2D20
 
       foreach (var name in names)
       {
-        if(name.StartsWith("music."))
+        if(name.StartsWith("music.") || name.StartsWith("secret."))
         {
           continue;
         }
