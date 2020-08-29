@@ -144,6 +144,13 @@ namespace R2D20
 
     public static FfgDie.Pool s_CurrentPool = new FfgDie.Pool();
 
+    public static Dictionary<(string, string), string> s_AutoSoundTriggers = new Dictionary<(string, string), string>()
+    {
+      { ("hedontlikeyou", "sorry"), "idontlikeyou" },
+    };
+    public static int s_AutoSoundDelay = 1000; // in ms
+    public static string s_MostRecentSound;
+
     [Command("ping")]
     public async Task Ping(CommandContext ctx)
     {
@@ -256,6 +263,15 @@ namespace R2D20
       await stream.FlushAsync();
 
       await voiceNextConnection.WaitForPlaybackFinishAsync();
+
+      var tuple = (s_MostRecentSound, soundName);
+      s_MostRecentSound = soundName;
+
+      if (s_AutoSoundTriggers.ContainsKey(tuple))
+      {
+        await Task.Delay(s_AutoSoundDelay);
+        await Play(ctx, s_AutoSoundTriggers[tuple]);
+      }
     }
 
     [Command("emote")]
