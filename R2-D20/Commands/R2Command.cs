@@ -149,8 +149,9 @@ namespace R2D20
       { ("hedontlikeyou", "sorry"), "idontlikeyou" },
       { ("omgvinny1", "omgvinny2"), "omgvinny3" },
       { ("kame", "hame"), "ha" },
-      { ("kame2", "hame2"), "ha2" },
+      { ("secret.kame", "secret.hame"), "secret.ha" },
       { ("scouter", "9000"), "what9000" },
+      { ("dumbasses", "whatdidhecallus"), "nowaytotalktopeople" },
     };
     public static int s_AutoSoundDelay = 1000; // in ms
     public static string s_MostRecentSound;
