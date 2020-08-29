@@ -323,7 +323,11 @@ namespace R2D20
         embed.Title = "[ Here are the sounds that I can play starting with ]";
         var fieldText = string.Empty;
         foreach (var name in names)
+        {
+          if (name.StartsWith("secret.") || name.StartsWith("music.") || name.StartsWith("R2."))
+            continue;
           fieldText += $"{Formatter.InlineCode(name)} ";
+        }
         embed.AddField(prefix, fieldText);
       }
       else
@@ -332,6 +336,8 @@ namespace R2D20
 
         foreach (var name in names)
         {
+          if (name.StartsWith("secret.") || name.StartsWith("music.") || name.StartsWith("R2."))
+            continue;
           var first = name.ToUpper().First();
           switch (first)
           {
