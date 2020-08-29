@@ -256,7 +256,6 @@ namespace R2D20
       await stream.FlushAsync();
 
       await voiceNextConnection.WaitForPlaybackFinishAsync();
-      await ctx.Message.DeleteAsync();
     }
 
     [Command("emote")]

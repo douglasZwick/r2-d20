@@ -20,6 +20,16 @@ namespace R2D20
     public DiscordClient m_Client { get; private set; }
     public CommandsNextExtension m_Commands { get; private set; }
     public VoiceNextExtension m_Voice { get; private set; }
+    public string m_Prefix { get; private set; }
+
+    public List<string> m_AutoDeleteCommands = new List<string>()
+    {
+      "play",
+      "emote",
+      "join",
+      "ping",
+      "leave",
+    };
 
     public async Task RunAsync()
     {
@@ -30,6 +40,7 @@ namespace R2D20
         json = await sr.ReadToEndAsync().ConfigureAwait(false);
 
       var configJson = JsonConvert.DeserializeObject<ConfigJson>(json);
+      m_Prefix = configJson.Prefix;
 
       var config = new DiscordConfiguration
       {
@@ -44,6 +55,7 @@ namespace R2D20
       m_Client.UseVoiceNext();
 
       m_Client.Ready += OnClientReady;
+      m_Client.MessageUpdated += OnMessageUpdated;
 
       var commandsConfig = new CommandsNextConfiguration
       {
@@ -58,6 +70,8 @@ namespace R2D20
 
       m_Commands.RegisterCommands<R2Command>();
 
+      m_Commands.CommandExecuted += OnCommandExecuted;
+
       await m_Client.ConnectAsync();
       await Task.Delay(-1);
     }
@@ -65,6 +79,27 @@ namespace R2D20
     private Task OnClientReady(ReadyEventArgs e)
     {
       return Task.CompletedTask;
+    }
+
+    private async Task OnMessageUpdated(MessageUpdateEventArgs e)
+    {
+      var message = e.Message;
+      var commandStart = message.GetStringPrefixLength(m_Prefix);
+      if (commandStart == -1) return;
+
+      var prefix = message.Content.Substring(0, commandStart);
+      var invocation = message.Content.Substring(commandStart);
+      var command = m_Commands.FindCommand(invocation, out var args);
+      if (command == null) return;
+
+      var ctx = m_Commands.CreateContext(message, prefix, command, args);
+      await m_Commands.ExecuteCommandAsync(ctx);
+    }
+
+    private async Task OnCommandExecuted(CommandExecutionEventArgs e)
+    {
+      if (m_AutoDeleteCommands.Contains(e.Command.Name))
+        await e.Context.Message.DeleteAsync();
     }
   }
 }
