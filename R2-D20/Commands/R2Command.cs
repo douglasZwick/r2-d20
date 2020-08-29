@@ -147,6 +147,10 @@ namespace R2D20
     public static Dictionary<(string, string), string> s_AutoSoundTriggers = new Dictionary<(string, string), string>()
     {
       { ("hedontlikeyou", "sorry"), "idontlikeyou" },
+      { ("omgvinny1", "omgvinny2"), "omgvinny3" },
+      { ("kame", "hame"), "ha" },
+      { ("kame2", "hame2"), "ha2" },
+      { ("scouter", "9000"), "what9000" },
     };
     public static int s_AutoSoundDelay = 1000; // in ms
     public static string s_MostRecentSound;
