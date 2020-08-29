@@ -306,56 +306,95 @@ namespace R2D20
         names = names.Where(path => path.ToUpper().StartsWith(prefixUpper)).ToList();
       }
 
-      string description = "";
+      var embed = new DiscordEmbedBuilder();
 
-      var currentHeader = "A";
-      var alreadyPrintedHeader = false;
-      var stillOnFirstItem = true;
+      var defaultList = new List<string>();
+      var abcList     = new List<string>();
+      var defList     = new List<string>();
+      var ghiList     = new List<string>();
+      var jklList     = new List<string>();
+      var mnoList     = new List<string>();
+      var pqrsList    = new List<string>();
+      var tuvList     = new List<string>();
+      var wxyzList    = new List<string>();
 
-      foreach (var name in names)
+      if (prefixSpecified)
       {
-        if(name.StartsWith("music.") || name.StartsWith("secret."))
+        embed.Title = "[ Here are the sounds that I can play starting with ]";
+        var fieldText = string.Empty;
+        foreach (var name in names)
+          fieldText += $"{Formatter.InlineCode(name)} ";
+        embed.AddField(prefix, fieldText);
+      }
+      else
+      {
+        embed.Title = "[ Here are the sounds that I can play: ]";
+
+        foreach (var name in names)
         {
-          continue;
+          var first = name.ToUpper().First();
+          switch (first)
+          {
+            default:
+              defaultList.Add(name);
+              break;
+            case 'A':
+            case 'B':
+            case 'C':
+              abcList.Add(name);
+              break;
+            case 'D':
+            case 'E':
+            case 'F':
+              defList.Add(name);
+              break;
+            case 'G':
+            case 'H':
+            case 'I':
+              ghiList.Add(name);
+              break;
+            case 'J':
+            case 'K':
+            case 'L':
+              jklList.Add(name);
+              break;
+            case 'M':
+            case 'N':
+            case 'O':
+              mnoList.Add(name);
+              break;
+            case 'P':
+            case 'Q':
+            case 'R':
+            case 'S':
+              pqrsList.Add(name);
+              break;
+            case 'T':
+            case 'U':
+            case 'V':
+              tuvList.Add(name);
+              break;
+            case 'W':
+            case 'X':
+            case 'Y':
+            case 'Z':
+              wxyzList.Add(name);
+              break;
+          }
         }
 
-        if (!prefixSpecified)
-        {
-          var nameUpper = name.ToUpper();
-          if (!nameUpper.StartsWith(currentHeader))
-          {
-            currentHeader = nameUpper.First().ToString();
-            alreadyPrintedHeader = false;
-          }
-
-          if (!alreadyPrintedHeader)
-          {
-            alreadyPrintedHeader = true;
-
-            if (!stillOnFirstItem)
-              description += Environment.NewLine;
-
-            description += $"{Formatter.Bold(currentHeader)} ";
-          }
-        }
-
-        description += $"{Formatter.InlineCode(name)} ";
-
-        stillOnFirstItem = false;
+        AddSoundListEmbedField(embed, defaultList, "Digits / Symbols");
+        AddSoundListEmbedField(embed, abcList,  "ABC");
+        AddSoundListEmbedField(embed, defList,  "DEF");
+        AddSoundListEmbedField(embed, ghiList,  "GHI");
+        AddSoundListEmbedField(embed, jklList,  "JKL");
+        AddSoundListEmbedField(embed, mnoList,  "MNO");
+        AddSoundListEmbedField(embed, pqrsList, "PQRS");
+        AddSoundListEmbedField(embed, tuvList,  "TUV");
+        AddSoundListEmbedField(embed, wxyzList, "WXYZ");
       }
 
-      string title;
-      if (prefixSpecified)
-        title = $"[ Here are the sounds that I can play starting with {prefix}: ]";
-      else
-        title = "[ Here are the sounds that I can play: ]";
-
-      var _embed = new DiscordEmbedBuilder
-      {
-        Title = title,
-        Description = description,
-      };
-      await ctx.RespondAsync(embed: _embed);
+      await ctx.RespondAsync(embed: embed);
     }
 
     [Command("musiclist")]
@@ -963,6 +1002,17 @@ namespace R2D20
       }
 
       return roleFound;
+    }
+
+    private void AddSoundListEmbedField(DiscordEmbedBuilder embed, List<string> list, string name)
+    {
+      if (list.Count <= 0)
+        return;
+
+      var fieldText = string.Empty;
+      foreach (var item in list)
+        fieldText += $"{Formatter.InlineCode(item)} ";
+      embed.AddField(name, fieldText);
     }
 
     private async Task Say(CommandContext ctx, string message)
