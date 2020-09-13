@@ -676,10 +676,13 @@ namespace R2D20
       var se = FfgDie.s_DiceEmoji[FfgDie.Type.Setback];
       var fe = FfgDie.s_DiceEmoji[FfgDie.Type.Force];
 
+      var ics = Formatter.InlineCode(" "); // inline code space
+
       var embed = new DiscordEmbedBuilder();
       embed.Title = "[ Here are the dice that we use in the Star Wars RPGs. ]";
       embed.Description = "Examples:" + Environment.NewLine
-        + Formatter.InlineCode("!pool") + $"{ae} {ae} {pe} {pe}" + Environment.NewLine
+        + Formatter.InlineCode("!roll ability ability proficiency boost") + Environment.NewLine
+        + Formatter.InlineCode("!pool ") + $"{ae}{ics}{ae}{ics}{pe}{ics}{pe}" + Environment.NewLine
         + Formatter.InlineCode("!add ddss");
       var aText = ae + ", " + Formatter.InlineCode("a") + ", " +
         Formatter.InlineCode("ability") + ", " + Formatter.InlineCode("abilityDie");
