@@ -158,6 +158,7 @@ namespace R2D20
     public static string s_MostRecentSound;
 
     [Command("ping")]
+    [Description("Used as a simple acknowledgement that I'm online.")]
     public async Task Ping(CommandContext ctx)
     {
       await Say(ctx, "[ Beep. ]");
@@ -165,12 +166,14 @@ namespace R2D20
     }
 
     [Command("echo")]
-    public async Task Echo(CommandContext ctx, params string[] args)
+    [Description("Makes me repeat what you input back to you.")]
+    public async Task Echo(CommandContext ctx,
+      [Description("The stuff to repeat.")] params string[] args)
     {
-      var message = "[ Meep ]\n";
+      var message = "[ Meep ]" + Environment.NewLine;
       foreach (var arg in args)
       {
-        message += "`" + arg + "`\n";
+        message += "`" + arg + "`" + Environment.NewLine;
       }
       message += "[ zorp. ]";
       await Say(ctx, message);
@@ -178,7 +181,10 @@ namespace R2D20
     }
 
     [Command("join")]
-    public async Task Join(CommandContext ctx, [RemainingText] string channelName)
+    [Description("Asks me to join a voice channel.")]
+    public async Task Join(CommandContext ctx,
+      [Description("The channel to join. If blank, I'll join the channel you're in.")]
+      [RemainingText] string channelName)
     {
       var voiceNext = ctx.Client.GetVoiceNext();
 
@@ -223,6 +229,7 @@ namespace R2D20
     }
 
     [Command("leave")]
+    [Description("Asks me to leave the voice channel I'm in.")]
     public async Task Leave(CommandContext ctx)
     {
       var voiceNext = ctx.Client.GetVoiceNext();
@@ -235,7 +242,10 @@ namespace R2D20
     }
 
     [Command("play")]
-    public async Task Play(CommandContext ctx, [RemainingText] string soundName)
+    [Description("Asks me to play a sound. Use !soundlist to see what I can play.")]
+    public async Task Play(CommandContext ctx,
+      [Description("The name of the sound for me to play.")]
+      [RemainingText] string soundName)
     {
       var guild = ctx.Guild;
       if (guild == null)
@@ -282,7 +292,10 @@ namespace R2D20
     }
 
     [Command("emote")]
-    public async Task Emote(CommandContext ctx, [RemainingText] string emotion)
+    [Description("Asks me to express an emotion. Use !emotelist to see what I can feel.")]
+    public async Task Emote(CommandContext ctx,
+      [Description("The name of the emotion for me to express.")]
+      [RemainingText] string emotion)
     {
       emotion = emotion.ToLower().Trim();
       if (s_Emotions.ContainsKey(emotion))
@@ -293,7 +306,10 @@ namespace R2D20
     }
 
     [Command("soundlist")]
-    public async Task SoundList(CommandContext ctx, [RemainingText] string prefix)
+    [Description("Asks me to recite an alphabetical list of the sounds I can play.")]
+    public async Task SoundList(CommandContext ctx,
+      [Description("If specified, I'll just show you the sounds that start with this.")]
+      [RemainingText] string prefix)
     {
       var prefixSpecified = !string.IsNullOrEmpty(prefix);
 
@@ -406,6 +422,7 @@ namespace R2D20
     }
 
     [Command("musiclist")]
+    [Description("Asks me to recite an alphabetical list of the music I can play.")]
     public async Task MusicList(CommandContext ctx)
     {
       var names = Directory.GetFiles("audio");
@@ -435,6 +452,7 @@ namespace R2D20
     }
 
     [Command("emotelist")]
+    [Description("Asks me to recite a list of the emotions I am capable of expressing.")]
     public async Task EmoteList(CommandContext ctx)
     {
       var emotions = s_Emotions.Keys;
@@ -489,6 +507,7 @@ namespace R2D20
     }
     
     [Command("fclist")]
+    [Description("Asks me to list the Switch friend codes that I have registered.")]
     public async Task ListFriendCodes(CommandContext ctx)
     {
       string path = $"data{Path.DirectorySeparatorChar}friendcodes.txt";
@@ -518,7 +537,10 @@ namespace R2D20
     }
 
     [Command("rolln")]
-    public async Task RollN(CommandContext ctx, string diceString)
+    [Description("Asks me to roll numeric dice.")]
+    public async Task RollN(CommandContext ctx,
+      [Description("Which and how many dice to roll: [how many dice]d[how many sides]")]
+      string diceString)
     {
       diceString = diceString.ToLower().Trim();
       var diceNumbers = diceString.Split("d");
@@ -548,7 +570,11 @@ namespace R2D20
     }
 
     [Command("pool")]
-    public async Task Pool(CommandContext ctx, params string[] args)
+    [Description("Asks me to create a new empty dice pool, or recite the current pool. "
+      + "Use `!dicehelp` for a list of dice that I can add.")]
+    public async Task Pool(CommandContext ctx,
+      [Description("The dice to add. If blank, I'll just recite the current pool.")]
+      params string[] args)
     {
       if (args.Length == 0)
       {
@@ -567,7 +593,11 @@ namespace R2D20
     }
 
     [Command("add")]
-    public async Task Add(CommandContext ctx, params string[] args)
+    [Description("Asks me to add dice to the current pool. Creates one if necessary. "
+      + "Use `!dicehelp` for a list of dice that I can add.")]
+    public async Task Add(CommandContext ctx,
+      [Description("The dice to add.")]
+      params string[] args)
     {
       if (s_CurrentPool == null || s_CurrentPool.m_Counts.Count == 0)
         s_CurrentPool = new FfgDie.Pool();
@@ -575,12 +605,15 @@ namespace R2D20
     }
 
     [Command("addsecret")]
+    [Description("This feature isn't ready yet. Ask Doug if you're curious.")]
     public async Task AddSecret(CommandContext ctx, params string[] args)
     {
       await Reply(ctx, "[ This feature will be added soon. ]");
     }
 
     [Command("remove")]
+    [Description("Asks me to remove dice from the current pool. "
+      + "Use `!dicehelp` for a list of dice that I can remove.")]
     public async Task Remove(CommandContext ctx, params string[] args)
     {
       if (s_CurrentPool == null || s_CurrentPool.m_Counts.Count == 0)
@@ -632,31 +665,107 @@ namespace R2D20
     }
 
     [Command("dicehelp")]
+    [Description("Asks me to recite a list of dice that can be used with various commands.")]
     public async Task DiceHelp(CommandContext ctx)
     {
-      string diceHelpString =   "Ability: " + FfgDie.s_DiceEmoji[FfgDie.Type.Ability] +
-                                "\nProficiency: " + FfgDie.s_DiceEmoji[FfgDie.Type.Proficiency] +
-                                "\nBoost: " + FfgDie.s_DiceEmoji[FfgDie.Type.Boost] +
-                                "\nDifficulty: " + FfgDie.s_DiceEmoji[FfgDie.Type.Difficulty] +
-                                "\nChallenge: " + FfgDie.s_DiceEmoji[FfgDie.Type.Challenge] +
-                                "\nSetback: " + FfgDie.s_DiceEmoji[FfgDie.Type.Setback] +
-                                "\nForce: " + FfgDie.s_DiceEmoji[FfgDie.Type.Force];
-      await Say(ctx, diceHelpString);
+      var ae = FfgDie.s_DiceEmoji[FfgDie.Type.Ability];
+      var pe = FfgDie.s_DiceEmoji[FfgDie.Type.Proficiency];
+      var be = FfgDie.s_DiceEmoji[FfgDie.Type.Boost];
+      var de = FfgDie.s_DiceEmoji[FfgDie.Type.Difficulty];
+      var ce = FfgDie.s_DiceEmoji[FfgDie.Type.Challenge];
+      var se = FfgDie.s_DiceEmoji[FfgDie.Type.Setback];
+      var fe = FfgDie.s_DiceEmoji[FfgDie.Type.Force];
+
+      var embed = new DiscordEmbedBuilder();
+      embed.Title = "[ Here are the dice that we use in the Star Wars RPGs. ]";
+      embed.Description = "Examples:" + Environment.NewLine
+        + Formatter.InlineCode("!pool") + $"{ae} {ae} {pe} {pe}" + Environment.NewLine
+        + Formatter.InlineCode("!add ddss");
+      var aText = ae + ", " + Formatter.InlineCode("a") + ", " +
+        Formatter.InlineCode("ability") + ", " + Formatter.InlineCode("abilityDie");
+      var pText = pe + ", " + Formatter.InlineCode("p") + ", " +
+        Formatter.InlineCode("proficiency") + ", " + Formatter.InlineCode("proficiencyDie");
+      var bText = be + ", " + Formatter.InlineCode("b") + ", " +
+        Formatter.InlineCode("boost") + ", " + Formatter.InlineCode("boostDie");
+      var dText = de + ", " + Formatter.InlineCode("d") + ", " +
+        Formatter.InlineCode("difficulty") + ", " + Formatter.InlineCode("difficultyDie");
+      var cText = ce + ", " + Formatter.InlineCode("c") + ", " +
+        Formatter.InlineCode("challenge") + ", " + Formatter.InlineCode("challengeDie");
+      var sText = se + ", " + Formatter.InlineCode("s") + ", " +
+        Formatter.InlineCode("setback") + ", " + Formatter.InlineCode("setbackDie");
+      var fText = fe + ", " + Formatter.InlineCode("f") + ", " +
+        Formatter.InlineCode("force") + ", " + Formatter.InlineCode("forceDie");
+      embed.AddField("Ability Die", aText);
+      embed.AddField("Proficiency Die", pText);
+      embed.AddField("Boost Die", bText);
+      embed.AddField("Difficulty Die", dText);
+      embed.AddField("Challenge Die", cText);
+      embed.AddField("Setback Die", sText);
+      embed.AddField("Force Die", fText);
+
+      //string diceHelpString =   "Ability: " + FfgDie.s_DiceEmoji[FfgDie.Type.Ability] +
+      //                          "\nProficiency: " + FfgDie.s_DiceEmoji[FfgDie.Type.Proficiency] +
+      //                          "\nBoost: " + FfgDie.s_DiceEmoji[FfgDie.Type.Boost] +
+      //                          "\nDifficulty: " + FfgDie.s_DiceEmoji[FfgDie.Type.Difficulty] +
+      //                          "\nChallenge: " + FfgDie.s_DiceEmoji[FfgDie.Type.Challenge] +
+      //                          "\nSetback: " + FfgDie.s_DiceEmoji[FfgDie.Type.Setback] +
+      //                          "\nForce: " + FfgDie.s_DiceEmoji[FfgDie.Type.Force];
+      //await Say(ctx, diceHelpString);
+
+      await ctx.RespondAsync(embed: embed);
     }
     
     [Command("symbolhelp")]
+    [Description("Asks me to recite a list of the symbols you'll see on the dice.")]
     public async Task SymbolHelp(CommandContext ctx)
     {
-      string diceHelpString =   "Success: " + FfgDie.s_SymbolEmoji[FfgDie.Symbol.Success] +
-                                "\nFailure: " + FfgDie.s_SymbolEmoji[FfgDie.Symbol.Failure] +
-                                "\nAdvantage: " + FfgDie.s_SymbolEmoji[FfgDie.Symbol.Advantage] +
-                                "\nThreat: " + FfgDie.s_SymbolEmoji[FfgDie.Symbol.Threat] +
-                                "\nTriumph: " + FfgDie.s_SymbolEmoji[FfgDie.Symbol.Triumph] +
-                                "\nDespair: " + FfgDie.s_SymbolEmoji[FfgDie.Symbol.Despair];
-      await Say(ctx, diceHelpString);
+      var se = FfgDie.s_SymbolEmoji[FfgDie.Symbol.Success];
+      var fe = FfgDie.s_SymbolEmoji[FfgDie.Symbol.Failure];
+      var ae = FfgDie.s_SymbolEmoji[FfgDie.Symbol.Advantage];
+      var he = FfgDie.s_SymbolEmoji[FfgDie.Symbol.Threat];
+      var te = FfgDie.s_SymbolEmoji[FfgDie.Symbol.Triumph];
+      var de = FfgDie.s_SymbolEmoji[FfgDie.Symbol.Despair];
+      var le = FfgDie.s_SymbolEmoji[FfgDie.Symbol.Light];
+      var ke = FfgDie.s_SymbolEmoji[FfgDie.Symbol.Dark];
+
+      var embed = new DiscordEmbedBuilder();
+      embed.Title = "[ Here are the symbols you'll see on the Star Wars dice. ]";
+      embed.AddField($"Success {se}",
+        "You need at least one of these for a skill to work. Cancels with "
+        + Formatter.Bold($"Failure {fe}") + ".");
+      embed.AddField($"Failure {fe}",
+        "You want to avoid seeing this. Cancels with "
+        + Formatter.Bold($"Success {se}") + ".");
+      embed.AddField($"Advantage {ae}",
+        "Small situational benefit. Cancels with "
+        + Formatter.Bold($"Threat {he}") + ".");
+      embed.AddField($"Threat {he}",
+        "Small situational detriment. Cancels with "
+        + Formatter.Bold($"Advantage {ae}") + ".");
+      embed.AddField($"Triumph {te}",
+        $"Large situational benefit. Also adds {se}. "
+        + Formatter.Bold($"Does not cancel with Despair {de}."));
+      embed.AddField($"Despair {de}",
+        $"Large situational detriment. Also adds {fe}. "
+        + Formatter.Bold($"Does not cancel with Triumph {te}."));
+      embed.AddField($"Light {le}",
+        "Represents the Light Side of the Force.");
+      embed.AddField($"Dark {ke}",
+        "Represents the Dark Side of the Force.");
+
+      //string diceHelpString =   "Success: " + FfgDie.s_SymbolEmoji[FfgDie.Symbol.Success] +
+      //                          "\nFailure: " + FfgDie.s_SymbolEmoji[FfgDie.Symbol.Failure] +
+      //                          "\nAdvantage: " + FfgDie.s_SymbolEmoji[FfgDie.Symbol.Advantage] +
+      //                          "\nThreat: " + FfgDie.s_SymbolEmoji[FfgDie.Symbol.Threat] +
+      //                          "\nTriumph: " + FfgDie.s_SymbolEmoji[FfgDie.Symbol.Triumph] +
+      //                          "\nDespair: " + FfgDie.s_SymbolEmoji[FfgDie.Symbol.Despair];
+      //await Say(ctx, diceHelpString);
+
+      await ctx.RespondAsync(embed: embed);
     }
 
     [Command("clear")]
+    [Description("Asks me to clear the current dice pool.")]
     public async Task Clear(CommandContext ctx)
     {
       if (s_CurrentPool == null || s_CurrentPool.m_Counts.Count == 0)
@@ -673,24 +782,37 @@ namespace R2D20
     }
 
     [Command("roll")]
-    public async Task Roll(CommandContext ctx, params string[] args)
+    [Description("Asks me to roll the dice. "
+      + "Use `!dicehelp` for a list of dice that I can roll.")]
+    public async Task Roll(CommandContext ctx,
+      [Description("The dice for me to roll. If blank, I'll roll the current pool.")]
+      params string[] args)
     {
       await RollHelper(ctx, FfgDie.RollType.Normal, args);
     }
 
     [Command("rollbest")]
-    public async Task RollBest(CommandContext ctx, params string[] args)
+    [Description("Asks me to show the best possible roll. "
+      + "Use `!dicehelp` for a list of dice that I can roll.")]
+    public async Task RollBest(CommandContext ctx,
+      [Description("The dice for me to roll. If blank, I'll roll the current pool.")]
+      params string[] args)
     {
       await RollHelper(ctx, FfgDie.RollType.Best, args);
     }
 
     [Command("rollworst")]
-    public async Task RollWorst(CommandContext ctx, params string[] args)
+    [Description("Asks me to show the worst possible roll. "
+      + "Use `!dicehelp` for a list of dice that I can roll.")]
+    public async Task RollWorst(CommandContext ctx,
+      [Description("The dice for me to roll. If blank, I'll roll the current pool.")]
+      params string[] args)
     {
       await RollHelper(ctx, FfgDie.RollType.Worst, args);
     }
 
     [Command("friendcodes")]
+    [Description("...I think this command isn't ready yet. Ask Alek if you're curious.")]
     public async Task FriendCodes(CommandContext ctx)
     {
       await Task.CompletedTask;
