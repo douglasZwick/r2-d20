@@ -30,6 +30,8 @@ namespace R2D20
       "join",
       "ping",
       "leave",
+      "smash",
+      "begincrawl",
     };
 
     public async Task RunAsync()

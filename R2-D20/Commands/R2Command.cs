@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 namespace R2D20
@@ -156,6 +157,53 @@ namespace R2D20
     };
     public static int s_AutoSoundDelay = 1000; // in ms
     public static string s_MostRecentSound;
+    public static string s_SmashSM  = "<:sm:754881714857443419>";
+    public static string s_SmashAAA = "<:aaa:754881715595640913>";
+    public static string s_SmashSH  = "<:sh:754881714668437535>";
+
+    public static string s_CrawlText =
+      "                EPISODE IV\n" +
+      " \n" +
+      "              A NEW HOPE\n" +
+      " \n" +
+      " \n" +
+      "It   is   a   period   of   civil   war.\n" +
+      "Rebel     spaceships,      striking\n" +
+      "from a hidden base,  have won\n" +
+      "their     first     victory    against\n" +
+      "the evil Galactic Empire.\n" +
+      " \n" +
+      "During     the     battle,      Rebel\n" +
+      "spies  managed  to steal secret\n" +
+      "plans       to       the       Empire's\n" +
+      "ultimate  weapon,  the  DEATH\n" +
+      "STAR,     an     armored    space\n" +
+      "station  with  enough  power to\n" +
+      "destroy an entire planet.\n" +
+      " \n" +
+      "Pursued     by     the     Empire's\n" +
+      "sinister       agents,       Princess\n" +
+      "Leia   races   home  aboard  her\n" +
+      "starship,     custodian    of    the\n" +
+      "stolen plans  that can  save her\n" +
+      "people            and            restore\n" +
+      "freedom to the galaxy....";
+    public static int s_CrawlLineDelay = 1500;  // in ms
+    public readonly static int s_MaxCrawlLines = 12;
+    public static string s_CrawlMusic = "music.starwars";
+    public static int s_CrawlDelay0 = 2000; // before intro text
+    public static int s_CrawlDelay1 = 3500; // intro text duration
+    public static int s_CrawlDelay2 = 2000; // between intro and game title
+    public static int s_CrawlDelay3 = 9000; // game title duration
+    public static int s_CrawlDelay4 = 2000; // between game title and crawl
+    public static int s_CrawlDelay5 = 2000; // after the last line of the crawl
+    public static string s_CrawlIntro0 = "        A long time ago in a galaxy far,";
+    public static string s_CrawlIntro1 = "        far away....";
+    public static string s_CrawlGameTitle0 = "                    `BEAN`";
+    public static string s_CrawlGameTitle1 = "                    `TOWN`";
+
+    static List<string> s_CrawlLines;
+
 
     [Command("ping")]
     [Description("Used as a simple acknowledgement that I'm online.")]
@@ -277,7 +325,7 @@ namespace R2D20
       var stream = voiceNextConnection.GetTransmitStream(20);
       await ffout.CopyToAsync(stream);
       await stream.FlushAsync();
-
+      
       await voiceNextConnection.WaitForPlaybackFinishAsync();
 
       var tuple = (s_MostRecentSound, soundName);
@@ -288,6 +336,27 @@ namespace R2D20
         await Task.Delay(s_AutoSoundDelay);
         var message = $"!play {s_AutoSoundTriggers[tuple]}";
         await ctx.Channel.SendMessageAsync(message).ConfigureAwait(false);
+      }
+    }
+
+    [Command("stop")]
+    [Description("Asks me to stop the sound I'm playing.")]
+    public async Task Stop(CommandContext ctx)
+    {
+      var guild = ctx.Guild;
+      if (guild == null)
+        throw new InvalidOperationException("No guild, no voice channels. Was this a DM...?");
+
+      var voiceNext = ctx.Client.GetVoiceNext();
+
+      var voiceNextConnection = voiceNext.GetConnection(guild);
+      if (voiceNextConnection == null)
+        throw new InvalidOperationException("R2-D20 is not connected to a voice channel in this server.");
+
+      if (voiceNextConnection.IsPlaying)
+      {
+        voiceNextConnection.Pause();
+        await voiceNextConnection.SendSpeakingAsync(false);
       }
     }
 
@@ -614,7 +683,9 @@ namespace R2D20
     [Command("remove")]
     [Description("Asks me to remove dice from the current pool. "
       + "Use `!dicehelp` for a list of dice that I can remove.")]
-    public async Task Remove(CommandContext ctx, params string[] args)
+    public async Task Remove(CommandContext ctx,
+      [Description("The dice to remove.")]
+      params string[] args)
     {
       if (s_CurrentPool == null || s_CurrentPool.m_Counts.Count == 0)
       {
@@ -706,14 +777,6 @@ namespace R2D20
       embed.AddField("Setback Die", sText);
       embed.AddField("Force Die", fText);
 
-      //string diceHelpString =   "Ability: " + FfgDie.s_DiceEmoji[FfgDie.Type.Ability] +
-      //                          "\nProficiency: " + FfgDie.s_DiceEmoji[FfgDie.Type.Proficiency] +
-      //                          "\nBoost: " + FfgDie.s_DiceEmoji[FfgDie.Type.Boost] +
-      //                          "\nDifficulty: " + FfgDie.s_DiceEmoji[FfgDie.Type.Difficulty] +
-      //                          "\nChallenge: " + FfgDie.s_DiceEmoji[FfgDie.Type.Challenge] +
-      //                          "\nSetback: " + FfgDie.s_DiceEmoji[FfgDie.Type.Setback] +
-      //                          "\nForce: " + FfgDie.s_DiceEmoji[FfgDie.Type.Force];
-      //await Say(ctx, diceHelpString);
 
       await ctx.RespondAsync(embed: embed);
     }
@@ -755,14 +818,6 @@ namespace R2D20
         "Represents the Light Side of the Force.");
       embed.AddField($"Dark {ke}",
         "Represents the Dark Side of the Force.");
-
-      //string diceHelpString =   "Success: " + FfgDie.s_SymbolEmoji[FfgDie.Symbol.Success] +
-      //                          "\nFailure: " + FfgDie.s_SymbolEmoji[FfgDie.Symbol.Failure] +
-      //                          "\nAdvantage: " + FfgDie.s_SymbolEmoji[FfgDie.Symbol.Advantage] +
-      //                          "\nThreat: " + FfgDie.s_SymbolEmoji[FfgDie.Symbol.Threat] +
-      //                          "\nTriumph: " + FfgDie.s_SymbolEmoji[FfgDie.Symbol.Triumph] +
-      //                          "\nDespair: " + FfgDie.s_SymbolEmoji[FfgDie.Symbol.Despair];
-      //await Say(ctx, diceHelpString);
 
       await ctx.RespondAsync(embed: embed);
     }
@@ -819,6 +874,165 @@ namespace R2D20
     public async Task FriendCodes(CommandContext ctx)
     {
       await Task.CompletedTask;
+    }
+
+    [Command("smash")]
+    [Description("Great for when you get a critical hit.")]
+    public async Task Smash(CommandContext ctx)
+    {
+      _ = Play(ctx, "smash");
+      var message = ctx.Channel.SendMessageAsync(s_SmashSM).Result;
+      await message.ModifyAsync($"{s_SmashSM}{s_SmashAAA}");
+      await message.ModifyAsync($"{s_SmashSM}{s_SmashAAA}{s_SmashSH}");
+    }
+
+    [Command("crawltext")]
+    [Description("Use this to give me a string to show with !begincrawl.")]
+    public async Task CrawlText(CommandContext ctx,
+      [Description("The text for the crawl. If blank, I'll reply with the current text instead.")]
+      [RemainingText] string text)
+    {
+      if (string.IsNullOrEmpty(text))
+      {
+        if (string.IsNullOrEmpty(s_CrawlText))
+          await Reply(ctx, "[ The crawl text is currently empty. ]");
+        else
+          await Reply(ctx, "[ Here is the current crawl text: ]" + Environment.NewLine
+            + s_CrawlText);
+      }
+      else
+      {
+        s_CrawlText = text;
+        await Reply(ctx, "[ Okay, here is the new crawl text: ]" + Environment.NewLine
+          + s_CrawlText);
+      }
+    }
+
+    [Command("crawldelay")]
+    [Description("Use this to set the delay between lines of the text crawl.")]
+    public async Task CrawlSpeed(CommandContext ctx,
+      [Description("The delay in milliseconds. If blank, I'll replay with the current delay instead.")]
+      [RemainingText] string delayString)
+    {
+      if (string.IsNullOrEmpty(delayString))
+      {
+        await Reply(ctx, "[ The next text crawl will use a delay of " +
+          Formatter.Bold(s_CrawlLineDelay.ToString() + " ms") + " between lines. ]");
+      }
+      else
+      {
+        s_CrawlLineDelay = int.Parse(delayString);
+        await Reply(ctx, "[ Okay, the new text crawl delay is " +
+          Formatter.Bold(s_CrawlLineDelay.ToString() + " ms") + ". ]");
+      }
+    }
+
+    [Command("crawlmusic")]
+    [Description("Use this to set which music should play during the text crawl.")]
+    public async Task CrawlMusic(CommandContext ctx,
+      [Description("The music to play. If blank, I'll reply with the current name instead.")]
+      [RemainingText] string name)
+    {
+      if (string.IsNullOrEmpty(name))
+      {
+        await Reply(ctx, "[ The current crawl music is " +
+          Formatter.Bold(s_CrawlMusic) + ". ]");
+      }
+      else
+      {
+        s_CrawlMusic = name;
+        await Reply(ctx, "[ Okay, the new text crawl music is " +
+          Formatter.Bold(s_CrawlMusic) + ". ]");
+      }
+    }
+
+    [Command("begincrawl")]
+    [Description("Asks me to begin the text crawl with the current crawl text.")]
+    public async Task BeginCrawl(CommandContext ctx)
+    {
+      if (string.IsNullOrEmpty(s_CrawlText))
+        return;
+
+      var topMiddleIndex = s_MaxCrawlLines / 2 - 1;
+      var bottomMiddleIndex = topMiddleIndex + 1;
+
+      s_CrawlLines = new List<string>(s_MaxCrawlLines);
+      for (var i = 0; i < s_MaxCrawlLines; ++i)
+        s_CrawlLines.Add(string.Empty);
+
+      var page = GetCurrentCrawlPage();
+      var message = ctx.Channel.SendMessageAsync(page).Result;
+      await Task.Delay(s_CrawlDelay0);
+
+      s_CrawlLines[topMiddleIndex] = s_CrawlIntro0;
+      s_CrawlLines[bottomMiddleIndex] = s_CrawlIntro1;
+      page = GetCurrentCrawlPage();
+      await message.ModifyAsync(page);
+      await Task.Delay(s_CrawlDelay1);
+
+      page = ClearCrawlPage();
+      await message.ModifyAsync(page);
+      await Task.Delay(s_CrawlDelay2);
+
+      s_CrawlLines[topMiddleIndex] = s_CrawlGameTitle0;
+      s_CrawlLines[bottomMiddleIndex] = s_CrawlGameTitle1;
+      page = GetCurrentCrawlPage();
+      _ = Play(ctx, s_CrawlMusic);
+      await message.ModifyAsync(page);
+      await Task.Delay(s_CrawlDelay3);
+
+      page = ClearCrawlPage();
+      await message.ModifyAsync(page);
+      await Task.Delay(s_CrawlDelay4);
+
+      var allLines = s_CrawlText.Split("\n");
+
+      for (var i = 1 - s_MaxCrawlLines; i < allLines.Length; ++i)
+      {
+        for (var j = 0; j < s_MaxCrawlLines; ++j)
+        {
+          var index = i + j;
+          var lineText = index >= 0 && index < allLines.Length ? allLines[index] : string.Empty;
+          s_CrawlLines[j] = lineText;
+        }
+        page = GetCurrentCrawlPage();
+        await message.ModifyAsync(page);
+        await Task.Delay(s_CrawlLineDelay);
+      }
+
+      page = ClearCrawlPage();
+      await message.ModifyAsync(page);
+      await Task.Delay(s_CrawlDelay5);
+
+      await message.DeleteAsync();
+    }
+
+    private string GetCurrentCrawlPage()
+    {
+      var output = FfgDie.s_SymbolEmoji[FfgDie.Symbol.Triumph] + Environment.NewLine;
+      foreach (var line in s_CrawlLines)
+      {
+        if (string.IsNullOrEmpty(line) || string.IsNullOrWhiteSpace(line))
+          output += "\u2022\u2022\u2022    " + Environment.NewLine;
+        else
+          output += "\u2022\u2022\u2022    " + Formatter.Bold(line) + Environment.NewLine;
+      }
+      output += FfgDie.s_SymbolEmoji[FfgDie.Symbol.Despair];
+
+      return output;
+    }
+
+    private string ClearCrawlPage()
+    {
+      var output = FfgDie.s_SymbolEmoji[FfgDie.Symbol.Triumph] + Environment.NewLine;
+      for (var i = 0; i < s_CrawlLines.Count; ++i)
+      {
+        s_CrawlLines[i] = string.Empty;
+        output += "\u2022\u2022\u2022    " + Environment.NewLine;
+      }
+      output += FfgDie.s_SymbolEmoji[FfgDie.Symbol.Despair];
+
+      return output;
     }
 
     private async Task RollHelper(CommandContext ctx, FfgDie.RollType rollType, string[] args)
