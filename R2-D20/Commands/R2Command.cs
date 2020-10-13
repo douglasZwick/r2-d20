@@ -1166,11 +1166,11 @@ namespace R2D20
 
           outcomeString += despairString;
 
-          if (!noForce)
+          /*if (!noForce)
             if (string.IsNullOrEmpty(outcomeString))
               outcomeString = $"A {forceString}";
             else
-              outcomeString += $"... and a {forceString}";
+              outcomeString += $"... and a {forceString}";*/
         }
 
         string rollTypeMessage;
@@ -1235,20 +1235,20 @@ namespace R2D20
         else if (result.m_AdvantageStatus == FfgDie.Pool.RollResult.AdvantageStatus.Threat)
           soundName = PickRandom(s_KindaUpsetSounds);
         else
-          soundName = "bup";
-          //soundName = PickRandom(s_UnsureSounds);
+          //soundName = "bup";
+          soundName = PickRandom(s_UnsureSounds);
 
         await Reply(ctx, message);
         await Play(ctx, soundName);
 
-        if (result.m_ForceStatus == FfgDie.Pool.RollResult.ForceStatus.Light)
+        /*if (result.m_ForceStatus == FfgDie.Pool.RollResult.ForceStatus.Light)
           await Play(ctx, "light");
         else if (result.m_ForceStatus == FfgDie.Pool.RollResult.ForceStatus.DoubleLight)
           await Play(ctx, "doublelight");
         else if (result.m_ForceStatus == FfgDie.Pool.RollResult.ForceStatus.Dark)
           await Play(ctx, "dark");
         else if (result.m_ForceStatus == FfgDie.Pool.RollResult.ForceStatus.DoubleDark)
-          await Play(ctx, "doubledark");
+          await Play(ctx, "doubledark");*/
 
         s_CurrentPool = new FfgDie.Pool();
       }
