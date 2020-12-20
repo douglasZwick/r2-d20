@@ -246,17 +246,7 @@ namespace R2D20
       }
       else
       {
-        var allChannels = ctx.Guild.Channels;
-        var values = allChannels.Values;
-        foreach (var value in values)
-        {
-          if (value.Name == channelName)
-          {
-            channel = value;
-            break;
-          }
-        }
-
+        channel = GetChannelByName(channelName, ctx);
         if (channel == null)
           throw new InvalidOperationException("There doesn't seem to be a channel by that name.");
       }
@@ -876,6 +866,58 @@ namespace R2D20
       await Task.CompletedTask;
     }
 
+    [Command("migrate")]
+    [Description("Moves everyone in all voice channels to the specified channel.")]
+    public async Task Migrate(CommandContext ctx,
+      [Description("The channel to move to.")]
+      string channelName)
+    {
+      var destinationChannel = GetChannelByName(channelName, ctx);
+      if (destinationChannel == null)
+      {
+        var message = "There doesn't seem to be a channel by that name.";
+        await Reply(ctx, $"[ {message} ]");
+        throw new InvalidOperationException(message);
+      }
+
+      var allChannels = ctx.Guild.Channels.Values;
+      var voiceChannels = from channel in allChannels
+                          where channel.Type == ChannelType.Voice
+                          select channel;
+
+      foreach (var channel in voiceChannels)
+        foreach (var user in channel.Users)
+          await destinationChannel.PlaceMemberAsync(user);
+    }
+
+    [Command("migratefrom")]
+    [Description("Moves everyone from one specified voice channel to another.")]
+    public async Task Migrate(CommandContext ctx,
+      [Description("The channel to move from.")]
+      string fromChannelName,
+      [Description("The channel to move to.")]
+      string toChannelName)
+    {
+      var fromChannel = GetChannelByName(fromChannelName, ctx);
+      if (fromChannel == null)
+      {
+        var message = $"There's no channel called {fromChannelName}.";
+        await Reply(ctx, $"[ {message} ]");
+        throw new InvalidOperationException(message);
+      }
+
+      var toChannel = GetChannelByName(toChannelName, ctx);
+      if (toChannel == null)
+      {
+        var message = $"There's no channel called {toChannelName}.";
+        await Reply(ctx, $"[ {message} ]");
+        throw new InvalidOperationException(message);
+      }
+
+      foreach (var user in fromChannel.Users)
+        await toChannel.PlaceMemberAsync(user);
+    }
+
     [Command("smash")]
     [Description("Great for when you get a critical hit.")]
     public async Task Smash(CommandContext ctx)
@@ -1033,6 +1075,17 @@ namespace R2D20
       output += FfgDie.s_SymbolEmoji[FfgDie.Symbol.Despair];
 
       return output;
+    }
+
+    private DiscordChannel GetChannelByName(string channelName, CommandContext ctx)
+    {
+      var allChannels = ctx.Guild.Channels.Values;
+
+      foreach (var channel in allChannels)
+        if (channel.Name == channelName)
+          return channel;
+
+      return null;
     }
 
     private async Task RollHelper(CommandContext ctx, FfgDie.RollType rollType, string[] args)
