@@ -254,7 +254,7 @@ namespace R2D20
       var voiceNextConnection = voiceNext.GetConnection(ctx.Guild);
       if (voiceNextConnection != null)
       {
-        if (voiceNextConnection.Channel == channel)
+        if (voiceNextConnection.TargetChannel == channel)
         {
           var spec = string.IsNullOrEmpty(channelName) ? "your" : "that";
           throw new InvalidOperationException($"R2-D20 is already connected to {spec} channel.");
@@ -312,9 +312,9 @@ namespace R2D20
       var ffmpeg = Process.Start(psi);
       var ffout = ffmpeg.StandardOutput.BaseStream;
 
-      var stream = voiceNextConnection.GetTransmitStream(20);
-      await ffout.CopyToAsync(stream);
-      await stream.FlushAsync();
+      var sink = voiceNextConnection.GetTransmitSink(20);
+      await ffout.CopyToAsync(sink);
+      await sink.FlushAsync();
       
       await voiceNextConnection.WaitForPlaybackFinishAsync();
 

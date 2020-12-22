@@ -50,8 +50,8 @@ namespace R2D20
         Token = configJson.Token,
         TokenType = TokenType.Bot,
         AutoReconnect = true,
-        LogLevel = LogLevel.Debug,
-        UseInternalLogHandler = true,
+        //LogLevel = LogLevel.Debug,
+        //UseInternalLogHandler = true,
       };
 
       m_Client = new DiscordClient(config);
@@ -59,6 +59,7 @@ namespace R2D20
 
       m_Client.Ready += OnClientReady;
       m_Client.MessageCreated += OnMessageCreated;
+      m_Client.MessageCreated += CheckForPlaySyntax;
       m_Client.MessageUpdated += OnMessageUpdated;
 
       var commandsConfig = new CommandsNextConfiguration
@@ -80,46 +81,79 @@ namespace R2D20
       await Task.Delay(-1);
     }
 
-    private Task OnClientReady(ReadyEventArgs e)
+    private Task OnClientReady(DiscordClient client, ReadyEventArgs e)
     {
       return Task.CompletedTask;
     }
 
-    private async Task OnMessageCreated(MessageCreateEventArgs e)
+    private Task OnMessageCreated(DiscordClient client, MessageCreateEventArgs e)
     {
-      if (!e.Author.IsBot) return;
+      if (!e.Author.IsBot) return Task.CompletedTask;
 
-      var message = e.Message;
-      var commandStart = message.GetStringPrefixLength(m_Prefix);
-      if (commandStart == -1) return;
+      _ = Task.Run(async () =>
+      {
+        var message = e.Message;
+        var commandStart = message.GetStringPrefixLength(m_Prefix);
+        if (commandStart == -1) return;
 
-      var prefix = message.Content.Substring(0, commandStart);
-      var invocation = message.Content.Substring(commandStart);
-      var command = m_Commands.FindCommand(invocation, out var args);
-      if (command == null) return;
+        var prefix = message.Content.Substring(0, commandStart);
+        var invocation = message.Content.Substring(commandStart);
+        var command = m_Commands.FindCommand(invocation, out var args);
+        if (command == null) return;
 
-      if (command.Name != "play") return;
+        if (command.Name != "play") return;
 
-      var ctx = m_Commands.CreateContext(message, prefix, command, args);
-      await m_Commands.ExecuteCommandAsync(ctx);
+        var ctx = m_Commands.CreateContext(message, prefix, command, args);
+        await m_Commands.ExecuteCommandAsync(ctx);
+      });
+
+      return Task.CompletedTask;
     }
 
-    private async Task OnMessageUpdated(MessageUpdateEventArgs e)
+    private Task CheckForPlaySyntax(DiscordClient client, MessageCreateEventArgs e)
     {
-      var message = e.Message;
-      var commandStart = message.GetStringPrefixLength(m_Prefix);
-      if (commandStart == -1) return;
+      _ = Task.Run(async () =>
+      {
+        var message = e.Message;
+        var content = message.Content.Trim();
+        if (!content.StartsWith('`')) return;
 
-      var prefix = message.Content.Substring(0, commandStart);
-      var invocation = message.Content.Substring(commandStart);
-      var command = m_Commands.FindCommand(invocation, out var args);
-      if (command == null) return;
+        var firstIndex = content.IndexOf('`');
+        var lastIndex = content.LastIndexOf('`');
+        if (firstIndex != lastIndex) return;
 
-      var ctx = m_Commands.CreateContext(message, prefix, command, args);
-      await m_Commands.ExecuteCommandAsync(ctx);
+        var invocation = "play " + content.Substring(firstIndex + 1);
+        var command = m_Commands.FindCommand(invocation, out var args);
+        if (command == null) return;
+
+        var ctx = m_Commands.CreateContext(message, "!", command, args);
+        await m_Commands.ExecuteCommandAsync(ctx);
+      });
+
+      return Task.CompletedTask;
     }
 
-    private async Task OnCommandExecuted(CommandExecutionEventArgs e)
+    private Task OnMessageUpdated(DiscordClient client, MessageUpdateEventArgs e)
+    {
+      _ = Task.Run(async () =>
+      {
+        var message = e.Message;
+        var commandStart = message.GetStringPrefixLength(m_Prefix);
+        if (commandStart == -1) return;
+
+        var prefix = message.Content.Substring(0, commandStart);
+        var invocation = message.Content.Substring(commandStart);
+        var command = m_Commands.FindCommand(invocation, out var args);
+        if (command == null) return;
+
+        var ctx = m_Commands.CreateContext(message, prefix, command, args);
+        await m_Commands.ExecuteCommandAsync(ctx);
+      });
+
+      return Task.CompletedTask;
+    }
+
+    private async Task OnCommandExecuted(CommandsNextExtension cne, CommandExecutionEventArgs e)
     {
       if (m_AutoDeleteCommands.Contains(e.Command.Name))
         await e.Context.Message.DeleteAsync();
