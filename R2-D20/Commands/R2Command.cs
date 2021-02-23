@@ -204,6 +204,9 @@ namespace R2D20
 
     static List<string> s_CrawlLines;
 
+    public static ulong s_KrystalId = 699087279440003214ul;
+    public static string s_SoundKrystalHates = "secret.fart";
+
 
     [Command("ping")]
     [Description("Used as a simple acknowledgement that I'm online.")]
@@ -290,42 +293,72 @@ namespace R2D20
         throw new InvalidOperationException("No guild, no voice channels. Was this a DM...?");
 
       var path = $"audio{Path.DirectorySeparatorChar}{soundName}.mp3";
+      if (!File.Exists(path))
+        throw new FileNotFoundException($"I can't find a file called {soundName}.");
 
       var voiceNext = ctx.Client.GetVoiceNext();
+      if (voiceNext == null)
+        throw new InvalidOperationException("VoiceNext seems to be disabled or not configured.");
 
       var voiceNextConnection = voiceNext.GetConnection(guild);
       if (voiceNextConnection == null)
-        throw new InvalidOperationException("R2-D20 is not connected to a voice channel in this server.");
+        throw new InvalidOperationException("I'm not connected to a voice channel in this server.");
 
-      if (!File.Exists(path))
-        throw new FileNotFoundException("That file was not found.");
-
-      await voiceNextConnection.SendSpeakingAsync(true);  // this tells the server we're speaking
-
-      var psi = new ProcessStartInfo
+      if (soundName == s_SoundKrystalHates)
       {
-        FileName = "ffmpeg",
-        Arguments = $@"-i ""{path}"" -ac 2 -f s16le -ar 48000 pipe:1",
-        RedirectStandardOutput = true,
-        UseShellExecute = false,
-      };
-      var ffmpeg = Process.Start(psi);
-      var ffout = ffmpeg.StandardOutput.BaseStream;
+        foreach (var user in voiceNextConnection.TargetChannel.Users)
+        {
+          if (user.Id == s_KrystalId)
+          {
+            await Reply(ctx, "[ Please be considerate of the wishes of " +
+              user.DisplayName + ". She is a Pirate Legend and deserves our respect. ]");
+            return;
+          }
+        }
+      }
 
-      var sink = voiceNextConnection.GetTransmitSink(20);
-      await ffout.CopyToAsync(sink);
-      await sink.FlushAsync();
-      
-      await voiceNextConnection.WaitForPlaybackFinishAsync();
+      var exception = null as Exception;
 
-      var tuple = (s_MostRecentSound, soundName);
-      s_MostRecentSound = soundName;
-
-      if (s_AutoSoundTriggers.ContainsKey(tuple))
+      try
       {
-        await Task.Delay(s_AutoSoundDelay);
-        var message = $"!play {s_AutoSoundTriggers[tuple]}";
-        await ctx.Channel.SendMessageAsync(message).ConfigureAwait(false);
+        await voiceNextConnection.SendSpeakingAsync(true);  // this tells the server we're speaking
+
+        var psi = new ProcessStartInfo
+        {
+          FileName = "ffmpeg",
+          Arguments = $@"-i ""{path}"" -ac 2 -f s16le -ar 48000 pipe:1",
+          RedirectStandardOutput = true,
+          UseShellExecute = false,
+        };
+        var ffmpeg = Process.Start(psi);
+        var ffout = ffmpeg.StandardOutput.BaseStream;
+
+        var sink = voiceNextConnection.GetTransmitSink(20);
+        await ffout.CopyToAsync(sink);
+        await sink.FlushAsync();
+
+        await voiceNextConnection.WaitForPlaybackFinishAsync();
+
+        var tuple = (s_MostRecentSound, soundName);
+        s_MostRecentSound = soundName;
+
+        if (s_AutoSoundTriggers.ContainsKey(tuple))
+        {
+          await Task.Delay(s_AutoSoundDelay);
+          var message = $"!play {s_AutoSoundTriggers[tuple]}";
+          await ctx.Channel.SendMessageAsync(message).ConfigureAwait(false);
+        }
+      }
+      catch (Exception e) { exception = e; }
+      finally
+      {
+        await voiceNextConnection.SendSpeakingAsync(false);
+      }
+
+      if (exception != null)
+      {
+        await Reply(ctx, "[ An exception occurred during playback: " +
+          Formatter.InlineCode($"{exception.GetType()}: {exception.Message}"));
       }
     }
 

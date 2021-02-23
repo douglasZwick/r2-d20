@@ -61,6 +61,7 @@ namespace R2D20
       m_Client.MessageCreated += OnMessageCreated;
       m_Client.MessageCreated += CheckForPlaySyntax;
       m_Client.MessageUpdated += OnMessageUpdated;
+      m_Client.MessageUpdated += CheckUpdatedMessageForPlaySyntax;
 
       var commandsConfig = new CommandsNextConfiguration
       {
@@ -112,9 +113,18 @@ namespace R2D20
 
     private Task CheckForPlaySyntax(DiscordClient client, MessageCreateEventArgs e)
     {
+      return PlaySyntaxHelper(client, e.Message);
+    }
+
+    private Task CheckUpdatedMessageForPlaySyntax(DiscordClient client, MessageUpdateEventArgs e)
+    {
+      return PlaySyntaxHelper(client, e.Message);
+    }
+
+    private Task PlaySyntaxHelper(DiscordClient client, DiscordMessage message)
+    {
       _ = Task.Run(async () =>
       {
-        var message = e.Message;
         var content = message.Content.Trim();
         if (!content.StartsWith('`')) return;
 
