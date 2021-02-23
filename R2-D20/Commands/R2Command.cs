@@ -237,9 +237,7 @@ namespace R2D20
       [Description("The channel to join. If blank, I'll join the channel you're in.")]
       [RemainingText] string channelName)
     {
-      var voiceNext = ctx.Client.GetVoiceNext();
-
-      DiscordChannel channel = null;
+      DiscordChannel channel;
 
       if (string.IsNullOrEmpty(channelName))
       {
@@ -253,6 +251,10 @@ namespace R2D20
         if (channel == null)
           throw new InvalidOperationException("There doesn't seem to be a channel by that name.");
       }
+
+      var voiceNext = ctx.Client.GetVoiceNext();
+      if (voiceNext == null)
+        throw new InvalidOperationException("VoiceNext seems to be disabled or not configured.");
 
       var voiceNextConnection = voiceNext.GetConnection(ctx.Guild);
       if (voiceNextConnection != null)
@@ -333,7 +335,7 @@ namespace R2D20
         var ffmpeg = Process.Start(psi);
         var ffout = ffmpeg.StandardOutput.BaseStream;
 
-        var sink = voiceNextConnection.GetTransmitSink(20);
+        var sink = voiceNextConnection.GetTransmitSink();
         await ffout.CopyToAsync(sink);
         await sink.FlushAsync();
 
@@ -362,26 +364,26 @@ namespace R2D20
       }
     }
 
-    [Command("stop")]
-    [Description("Asks me to stop the sound I'm playing.")]
-    public async Task Stop(CommandContext ctx)
-    {
-      var guild = ctx.Guild;
-      if (guild == null)
-        throw new InvalidOperationException("No guild, no voice channels. Was this a DM...?");
+    //[Command("stop")]
+    //[Description("Asks me to stop the sound I'm playing.")]
+    //public async Task Stop(CommandContext ctx)
+    //{
+    //  var guild = ctx.Guild;
+    //  if (guild == null)
+    //    throw new InvalidOperationException("No guild, no voice channels. Was this a DM...?");
 
-      var voiceNext = ctx.Client.GetVoiceNext();
+    //  var voiceNext = ctx.Client.GetVoiceNext();
 
-      var voiceNextConnection = voiceNext.GetConnection(guild);
-      if (voiceNextConnection == null)
-        throw new InvalidOperationException("R2-D20 is not connected to a voice channel in this server.");
+    //  var voiceNextConnection = voiceNext.GetConnection(guild);
+    //  if (voiceNextConnection == null)
+    //    throw new InvalidOperationException("R2-D20 is not connected to a voice channel in this server.");
 
-      if (voiceNextConnection.IsPlaying)
-      {
-        voiceNextConnection.Pause();
-        await voiceNextConnection.SendSpeakingAsync(false);
-      }
-    }
+    //  if (voiceNextConnection.IsPlaying)
+    //  {
+    //    voiceNextConnection.Pause();
+    //    await voiceNextConnection.SendSpeakingAsync(false);
+    //  }
+    //}
 
     [Command("emote")]
     [Description("Asks me to express an emotion. Use !emotelist to see what I can feel.")]
