@@ -411,6 +411,34 @@ namespace R2D20
         }
       }
 
+      public void Upgrade(bool dark)
+      {
+        if (dark)
+        {
+          if (m_Counts.ContainsKey(s_DifficultyDie))
+          {
+            Remove(s_DifficultyDie);
+            Add(s_ChallengeDie);
+          }
+          else
+          {
+            Add(s_DifficultyDie);
+          }
+        }
+        else
+        {
+          if (m_Counts.ContainsKey(s_AbilityDie))
+          {
+            Remove(s_AbilityDie);
+            Add(s_ProficiencyDie);
+          }
+          else
+          {
+            Add(s_AbilityDie);
+          }
+        }
+      }
+
       public string GetSortedEmojiString()
       {
         var emojiString = string.Empty;

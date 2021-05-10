@@ -378,9 +378,9 @@ namespace R2D20
       }
     }
 
-    [Command("stop")]
-    [Description("Asks me to stop the sound I'm playing.")]
-    public async Task Stop(CommandContext ctx)
+    [Command("rejoin"), Aliases("stop")]
+    [Description("Asks me to leave and immediately rejoin the voice channel I'm in.")]
+    public async Task Rejoin(CommandContext ctx)
     {
       var guild = ctx.Guild;
       if (guild == null)
@@ -1097,6 +1097,27 @@ namespace R2D20
       await Task.Delay(s_CrawlDelay5);
 
       await message.DeleteAsync();
+    }
+
+    [Command("upgrade")]
+    [Description("Asks me to upgrade the dice pool with a Destiny Point.")]
+    public async Task Upgrade(CommandContext ctx,
+      [Description("Is this a light side or a dark side upgrade?")]
+      [RemainingText] string side)
+    {
+      if (s_CurrentPool == null || s_CurrentPool.m_Counts.Count == 0)
+      {
+        await Reply(ctx, "[ You can't upgrade an empty pool. ]");
+        await Play(ctx, PickRandom(s_ErrorSounds));
+      }
+      else
+      {
+        s_CurrentPool.Upgrade(side == "dark");
+
+        var emojiString = s_CurrentPool.GetSortedEmojiString();
+        await Reply(ctx, $"[ The pool now contains {emojiString}. ]");
+        await Play(ctx, PickRandom(s_CommandSounds));
+      }
     }
 
     private string GetCurrentCrawlPage()
