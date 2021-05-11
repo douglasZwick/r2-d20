@@ -433,6 +433,8 @@ namespace R2D20
         names = names.Where(path => path.ToUpper().StartsWith(prefixUpper)).ToList();
       }
 
+      var soundCount = names.Count;
+
       var embed = new DiscordEmbedBuilder();
 
       var defaultList = new List<string>();
@@ -447,7 +449,7 @@ namespace R2D20
 
       if (prefixSpecified)
       {
-        embed.Title = "[ Here are the sounds that I can play starting with ]";
+        embed.Title = $"[ Here are the {soundCount} sounds that I can play starting with ]";
         var fieldText = string.Empty;
         foreach (var name in names)
         {
@@ -459,7 +461,7 @@ namespace R2D20
       }
       else
       {
-        embed.Title = "[ Here are the sounds that I can play: ]";
+        embed.Title = $"[ Here are the {soundCount} sounds that I can play: ]";
 
         foreach (var name in names)
         {
