@@ -161,6 +161,35 @@ namespace R2D20
     public static string s_SmashSM  = "<:sm:754881714857443419>";
     public static string s_SmashAAA = "<:aaa:754881715595640913>";
     public static string s_SmashSH  = "<:sh:754881714668437535>";
+    public static string[] s_DancingNumbers =
+    {
+      "<a:0dance:842190443777359903>", "<a:1dance:842190444217499738>",
+      "<a:2dance:842190444154585099>", "<a:3dance:842190443961516053>",
+      "<a:4dance:842190444405981214>", "<a:5dance:842190445315489802>",
+      "<a:6dance:842190445265813514>", "<a:7dance:842190445127794769>",
+      "<a:8dance:842190445404618802>", "<a:9dance:842190445618266132>",
+    };
+    public static string[] s_DancingAlphabet =
+    {
+      "<a:Adance:842190668671746068>", "<a:Bdance:842190668335022101>",
+      "<a:Cdance:842190668570820640>", "<a:Ddance:842190669149503558>",
+      "<a:Edance:842190668810289153>", "<a:Fdance:842190669300105256>",
+      "<a:Gdance:842190671648653342>", "<a:Hdance:842190671561359380>",
+      "<a:Idance:842190671301443594>", "<a:Jdance:842190671007580221>",
+      "<a:Kdance:842190671397650443>", "<a:Ldance:842190671498838076>",
+      "<a:Mdance:842190672240967740>", "<a:Ndance:842190671782871042>",
+      "<a:Odance:842190672224321536>", "<a:Pdance:842190671958769704>",
+      "<a:Qdance:842190670306476073>", "<a:Rdance:842190672198238218>",
+      "<a:Sdance:842190671900180511>", "<a:Tdance:842190672014082058>",
+      "<a:Udance:842190671976595496>", "<a:Vdance:842190672080404490>",
+      "<a:Wdance:842190672135716954>", "<a:Xdance:842190672286842930>",
+      "<a:Ydance:842190671853912085>", "<a:Zdance:842190671825338450>",
+    };
+    public static string s_DancingQuestionMark = "<a:QUESdance:842190751760777307>";
+    public static string s_DancingExclamationMark = "<a:EXCLdance:842190751768117248>";
+    public static string s_DancingAtSign = "<a:ATdance:842190751747145728>";
+    public static string s_DancingDollarSign = "<a:DOLdance:842190751738626089>";
+    public static string s_DancingAmpersand = "<a:ANDdance:842190751383027782>";
 
     public static string s_CrawlText =
       "                EPISODE IV\n" +
@@ -207,6 +236,7 @@ namespace R2D20
 
     public static ulong s_KrystalId = 699087279440003214ul;
     public static string s_SoundKrystalHates = "secret.fart";
+    public static DateTime s_StartDateTime;
 
 
     [Command("ping")]
@@ -645,6 +675,80 @@ namespace R2D20
         await Play(ctx, PickRandom(s_CommandSounds));
         await ctx.RespondAsync(embed: _embed);
       }
+    }
+
+    [Command("uptime")]
+    [Description("Asks me how long I've been running.")]
+    public async Task Uptime(CommandContext ctx)
+    {
+      var span = DateTime.Now - s_StartDateTime;
+      var message = $"[ I've been running for {span}. ]";
+
+      await Reply(ctx, message);
+      await Play(ctx, PickRandom(s_CommandSounds));
+    }
+
+    [Command("dance")]
+    [Description("Asks me to make a message dance.")]
+    public async Task Dance(CommandContext ctx,
+      [Description("The message that should dance. This currently supports 0-9, A-Z, and &@$?!")]
+      [RemainingText]
+      string message)
+    {
+      if (string.IsNullOrEmpty(message))
+        return;
+
+      message = message.ToUpper();
+
+      var output = string.Empty;
+
+      foreach (var c in message)
+      {
+        switch (c)
+        {
+          case ' ':
+            output += "        ";
+            break;
+          case '\n':
+            output += Environment.NewLine;
+            break;
+          case '!':
+            output += s_DancingExclamationMark;
+            break;
+          case '?':
+            output += s_DancingQuestionMark;
+            break;
+          case '$':
+            output += s_DancingDollarSign;
+            break;
+          case '@':
+            output += s_DancingAtSign;
+            break;
+          case '&':
+            output += s_DancingAmpersand;
+            break;
+          default:
+            if (c >= '0' && c <= '9')
+            {
+              output += s_DancingNumbers[c - '0'];
+            }
+            else if (c >= 'A' && c <= 'Z')
+            {
+              output += s_DancingAlphabet[c - 'A'];
+            }
+            else
+            {
+              output += " ";
+            }
+            break;
+        }
+      }
+
+      var member = ctx.Member;
+      if (member != null)
+        await Say(ctx, member.Mention);
+
+      await Say(ctx, output);
     }
 
     [Command("rolln")]
@@ -1490,7 +1594,7 @@ namespace R2D20
 
     private async Task Say(CommandContext ctx, string message)
     {
-      await ctx.Message.RespondAsync(message).ConfigureAwait(false);
+      await ctx.Channel.SendMessageAsync(message).ConfigureAwait(false);
     }
 
     private async Task Reply(CommandContext ctx, string message)
