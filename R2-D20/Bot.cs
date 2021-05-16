@@ -23,8 +23,6 @@ namespace R2D20
     public VoiceNextExtension m_Voice { get; private set; }
     public string m_Prefix { get; private set; }
 
-    public DateTime m_StartDateTime;
-
     public List<string> m_AutoDeleteCommands = new List<string>()
     {
       "play",
@@ -35,11 +33,12 @@ namespace R2D20
       "smash",
       "begincrawl",
       "dance",
+      "spinee",
     };
 
     public async Task RunAsync()
     {
-      m_StartDateTime = DateTime.Now;
+      R2Command.s_StartDateTime = DateTime.Now;
 
       var json = string.Empty;
 

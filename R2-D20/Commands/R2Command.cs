@@ -7,6 +7,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -190,6 +191,9 @@ namespace R2D20
     public static string s_DancingAtSign = "<a:ATdance:842190751747145728>";
     public static string s_DancingDollarSign = "<a:DOLdance:842190751738626089>";
     public static string s_DancingAmpersand = "<a:ANDdance:842190751383027782>";
+
+    public static string s_Spinee = "<a:SPINee:829411240760836098>";
+    public static ulong s_SpineeId = 829411240760836098ul;
 
     public static string s_CrawlText =
       "                EPISODE IV\n" +
@@ -682,7 +686,61 @@ namespace R2D20
     public async Task Uptime(CommandContext ctx)
     {
       var span = DateTime.Now - s_StartDateTime;
-      var message = $"[ I've been running for {span}. ]";
+      var days = span.Days;
+      var hours = span.Hours;
+      var minutes = span.Minutes;
+      var seconds = span.Seconds;
+
+      var daysString = string.Empty;
+      if (days == 1)
+        daysString = "1 day";
+      else if (days > 1)
+        daysString = days.ToString() + " days";
+
+      var hoursString = string.Empty;
+      if (hours == 1)
+        hoursString = "1 hour";
+      else if (hours > 1)
+        hoursString = hours.ToString() + " hours";
+
+      var minutesString = string.Empty;
+      if (minutes == 1)
+        minutesString = "1 minute";
+      else if (minutes > 1)
+        minutesString = minutes.ToString() + " minutes";
+
+      var secondsString = string.Empty;
+      if (seconds == 1)
+        secondsString = "1 second";
+      else if (seconds > 1)
+        secondsString = seconds.ToString() + " seconds";
+
+      var message = string.Empty;
+      var spanString = string.Empty;
+      var spanList = new List<string>();
+
+      if (!string.IsNullOrEmpty(daysString))
+        spanList.Add(daysString);
+      if (!string.IsNullOrEmpty(hoursString))
+        spanList.Add(hoursString);
+      if (!string.IsNullOrEmpty(minutesString))
+        spanList.Add(minutesString);
+      if (!string.IsNullOrEmpty(secondsString))
+        spanList.Add(secondsString);
+
+      if (spanList.Count == 1)
+        spanString = spanList[0];
+      else if (spanList.Count == 2)
+        spanString = $"{spanList[0]} and {spanList[1]}";
+      else if (spanList.Count == 3)
+        spanString = $"{spanList[0]}, {spanList[1]}, and {spanList[2]}";
+      else if (spanList.Count == 4)
+        spanString = $"{spanList[0]}, {spanList[1]}, {spanList[2]}, and {spanList[3]}";
+
+      if (string.IsNullOrEmpty(spanString))
+        message = "[ I've only just started this very second. ]";
+      else
+        message = $"[ I've been running for {spanString}. ]";
 
       await Reply(ctx, message);
       await Play(ctx, PickRandom(s_CommandSounds));
@@ -749,6 +807,40 @@ namespace R2D20
         await Say(ctx, member.Mention);
 
       await Say(ctx, output);
+    }
+
+    [Command("spinee")]
+    [Description("Asks me say the SPINee emote, or asks me to react to a message with it.")]
+    public async Task Spinee(CommandContext ctx,
+      [Description("The relative index of the message to react to. If blank, I'll just say the emote.")]
+      [RemainingText] string indexStr)
+    {
+      if (string.IsNullOrEmpty(indexStr))
+      {
+        await Say(ctx, s_Spinee);
+      }
+      else
+      {
+        if (int.TryParse(indexStr, out int index))
+        {
+          var maxMessages = 100;
+
+          if (index >= maxMessages)
+          {
+            await Reply(ctx, $"[ I'd prefer not to react to messages further back than {maxMessages - 1} posts. ]");
+            return;
+          }
+
+          var recentMessages = await ctx.Channel.GetMessagesAsync(maxMessages);
+          var message = recentMessages[index];
+          var spinee = DiscordEmoji.FromGuildEmote(ctx.Client, s_SpineeId);
+          await message.CreateReactionAsync(spinee);
+        }
+        else
+        {
+          await Reply(ctx, "[ Please enter either a number or no arguments at all. ]");
+        }
+      }
     }
 
     [Command("rolln")]
@@ -923,7 +1015,6 @@ namespace R2D20
       embed.AddField("Setback Die", sText);
       embed.AddField("Force Die", fText);
 
-
       await ctx.RespondAsync(embed: embed);
     }
     
@@ -1079,7 +1170,7 @@ namespace R2D20
     public async Task Smash(CommandContext ctx)
     {
       _ = Play(ctx, "smash");
-      var message = ctx.Channel.SendMessageAsync(s_SmashSM).Result;
+      var message = await ctx.Channel.SendMessageAsync(s_SmashSM);
       await message.ModifyAsync($"{s_SmashSM}{s_SmashAAA}");
       await message.ModifyAsync($"{s_SmashSM}{s_SmashAAA}{s_SmashSH}");
     }
@@ -1159,7 +1250,7 @@ namespace R2D20
         s_CrawlLines.Add(string.Empty);
 
       var page = GetCurrentCrawlPage();
-      var message = ctx.Channel.SendMessageAsync(page).Result;
+      var message = await ctx.Channel.SendMessageAsync(page);
       await Task.Delay(s_CrawlDelay0);
 
       s_CrawlLines[topMiddleIndex] = s_CrawlIntro0;
