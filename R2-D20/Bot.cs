@@ -83,6 +83,9 @@ namespace R2D20
       m_Commands.CommandExecuted += OnCommandExecuted;
 
       await m_Client.ConnectAsync();
+
+      R2Command.LoadSavedData();
+
       await Task.Delay(-1);
     }
 

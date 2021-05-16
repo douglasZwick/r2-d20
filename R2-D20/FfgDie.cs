@@ -248,6 +248,8 @@ namespace R2D20
         public SuccessStatus m_SuccessStatus = SuccessStatus.Nothing;
         public AdvantageStatus m_AdvantageStatus = AdvantageStatus.Nothing;
         public ForceStatus m_ForceStatus = ForceStatus.Nothing;
+        public uint m_LightCount = 0;
+        public uint m_DarkCount = 0;
         public bool m_Triumph = false;
         public bool m_Despair = false;
 
@@ -302,25 +304,25 @@ namespace R2D20
           else
             m_AdvantageStatus = AdvantageStatus.Nothing;
 
-          var lightPips = m_Result.GetValueOrDefault(Symbol.Light, 0u);
-          var darkPips = m_Result.GetValueOrDefault(Symbol.Dark, 0u);
+          m_LightCount = m_Result.GetValueOrDefault(Symbol.Light, 0u);
+          m_DarkCount = m_Result.GetValueOrDefault(Symbol.Dark, 0u);
 
-          if (lightPips == 0u && darkPips == 0u)
+          if (m_LightCount == 0u && m_DarkCount == 0u)
           {
             m_ForceStatus = ForceStatus.Nothing;
           }
           else
           {
-            if (darkPips > lightPips)
+            if (m_DarkCount > m_LightCount)
             {
-              if (darkPips == 1)
+              if (m_DarkCount == 1)
                 m_ForceStatus = ForceStatus.Dark;
               else
                 m_ForceStatus = ForceStatus.DoubleDark;
             }
             else
             {
-              if (lightPips == 1)
+              if (m_LightCount == 1)
                 m_ForceStatus = ForceStatus.Light;
               else
                 m_ForceStatus = ForceStatus.DoubleLight;

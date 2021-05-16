@@ -12,6 +12,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace R2D20
@@ -241,6 +242,9 @@ namespace R2D20
     public static ulong s_KrystalId = 699087279440003214ul;
     public static string s_SoundKrystalHates = "secret.fart";
     public static DateTime s_StartDateTime;
+    public static FfgDestinyPool s_DestinyPool;
+    public static string s_SaveFolderPath = "save";
+    public static string s_DestinyPoolPath = "destiny.json";
 
 
     [Command("ping")]
@@ -1317,6 +1321,394 @@ namespace R2D20
       }
     }
 
+    [Command("destiny")]
+    [Description("Asks me for the current value of the Destiny Pool.")]
+    public async Task Destiny(CommandContext ctx)
+    {
+      if (s_DestinyPool.m_Light == 0 && s_DestinyPool.m_Dark == 0)
+      {
+        await Reply(ctx, "[ The Destiny Pool is currently empty. ]");
+        await Play(ctx, PickRandom(s_CommandSounds));
+
+        return;
+      }
+
+      var poolString = string.Empty;
+      var lightString = FfgDie.s_SymbolEmoji[FfgDie.Symbol.Light];
+      var darkString = FfgDie.s_SymbolEmoji[FfgDie.Symbol.Dark];
+
+      for (var i = 0; i < s_DestinyPool.m_Light; ++i)
+        poolString += lightString + " ";
+      for (var i = 0; i < s_DestinyPool.m_Dark; ++i)
+        poolString += darkString + " ";
+
+      var message = $"[ The Destiny Pool currently contains {poolString}. ]";
+
+      await Reply(ctx, message);
+      await Play(ctx, PickRandom(s_CommandSounds));
+    }
+
+    [Command("setdestiny")]
+    [Description("Asks me to set the Destiny Pool.\n" +
+      "***GMs and Droid Mechanics only!***")]
+    public async Task SetDestiny(CommandContext ctx,
+      [Description("The tokens to add.")]
+      params string[] args)
+    {
+      var member = ctx.Member;
+      if (member == null)
+        return;
+
+      var allowed = false;
+
+      foreach (var role in member.Roles)
+      {
+        if (role.Name == "GM" || role.Name == "Droid Mechanic")
+        {
+          allowed = true;
+          break;
+        }
+      }
+
+      if (!allowed)
+      {
+        await Reply(ctx, "[ You don't have permission to use this command! ]");
+        await Play(ctx, PickRandom(s_ErrorSounds));
+
+        return;
+      }
+
+      var lightCount = 0;
+      var darkCount = 0;
+
+      foreach (var arg in args)
+      {
+        if (arg == "light")
+        {
+          ++lightCount;
+        }
+        else if (arg == "dark")
+        {
+          ++darkCount;
+        }
+        else
+        {
+          foreach (var ch in arg)
+          {
+            var str = ch.ToString().ToLower();
+
+            if (str == "l" || str == FfgDie.s_SymbolEmoji[FfgDie.Symbol.Light])
+            {
+              ++lightCount;
+            }
+            else if (str == "d" || str == FfgDie.s_SymbolEmoji[FfgDie.Symbol.Dark])
+            {
+              ++darkCount;
+            }
+          }
+        }
+      }
+
+      s_DestinyPool.Set(lightCount, darkCount);
+
+      SaveDestinyPool();
+
+      await Destiny(ctx);
+    }
+
+    [Command("addlight")]
+    [Description("Asks me to add Light Side Destiny Tokens.\n" +
+      "***GMs and Droid Mechanics only!***")]
+    public async Task AddLight(CommandContext ctx,
+      [Description("The number of tokens to add.")]
+      int value)
+    {
+      var member = ctx.Member;
+      if (member == null)
+        return;
+
+      var allowed = false;
+
+      foreach (var role in member.Roles)
+      {
+        if (role.Name == "GM" || role.Name == "Droid Mechanic")
+        {
+          allowed = true;
+          break;
+        }
+      }
+
+      if (!allowed)
+      {
+        await Reply(ctx, "[ You don't have permission to use this command! ]");
+        await Play(ctx, PickRandom(s_ErrorSounds));
+
+        return;
+      }
+
+      s_DestinyPool.AddLight(value);
+
+      SaveDestinyPool();
+
+      await Destiny(ctx);
+    }
+
+    [Command("adddark")]
+    [Description("Asks me to add Dark Side Destiny Tokens.\n" +
+      "***GMs and Droid Mechanics only!***")]
+    public async Task AddDark(CommandContext ctx,
+      [Description("The number of tokens to add.")]
+      int value)
+    {
+      var member = ctx.Member;
+      if (member == null)
+        return;
+
+      var allowed = false;
+
+      foreach (var role in member.Roles)
+      {
+        if (role.Name == "GM" || role.Name == "Droid Mechanic")
+        {
+          allowed = true;
+          break;
+        }
+      }
+
+      if (!allowed)
+      {
+        await Reply(ctx, "[ You don't have permission to use this command! ]");
+        await Play(ctx, PickRandom(s_ErrorSounds));
+
+        return;
+      }
+
+      s_DestinyPool.AddDark(value);
+
+      SaveDestinyPool();
+
+      await Destiny(ctx);
+    }
+
+    [Command("removelight")]
+    [Description("Asks me to remove Light Side Destiny Tokens.\n" +
+      "***GMs and Droid Mechanics only!***")]
+    public async Task RemoveLight(CommandContext ctx,
+      [Description("The number of tokens to remove.")]
+      int value)
+    {
+      var member = ctx.Member;
+      if (member == null)
+        return;
+
+      var allowed = false;
+
+      foreach (var role in member.Roles)
+      {
+        if (role.Name == "GM" || role.Name == "Droid Mechanic")
+        {
+          allowed = true;
+          break;
+        }
+      }
+
+      if (!allowed)
+      {
+        await Reply(ctx, "[ You don't have permission to use this command! ]");
+        await Play(ctx, PickRandom(s_ErrorSounds));
+
+        return;
+      }
+
+      if (s_DestinyPool.m_Light <= 0)
+      {
+        await Reply(ctx, "[ There aren't any Light Side tokens to begin with. ]");
+        await Play(ctx, PickRandom(s_ErrorSounds));
+
+        return;
+      }
+
+      s_DestinyPool.AddLight(-value);
+
+      SaveDestinyPool();
+
+      await Destiny(ctx);
+    }
+
+    [Command("removedark")]
+    [Description("Asks me to remove Dark Side Destiny Tokens.\n" +
+      "***GMs and Droid Mechanics only!***")]
+    public async Task RemoveDark(CommandContext ctx,
+      [Description("The number of tokens to remove.")]
+      int value)
+    {
+      var member = ctx.Member;
+      if (member == null)
+        return;
+
+      var allowed = false;
+
+      foreach (var role in member.Roles)
+      {
+        if (role.Name == "GM" || role.Name == "Droid Mechanic")
+        {
+          allowed = true;
+          break;
+        }
+      }
+
+      if (!allowed)
+      {
+        await Reply(ctx, "[ You don't have permission to use this command! ]");
+        await Play(ctx, PickRandom(s_ErrorSounds));
+
+        return;
+      }
+
+      if (s_DestinyPool.m_Dark <= 0)
+      {
+        await Reply(ctx, "[ There aren't any Dark Side tokens to begin with. ]");
+        await Play(ctx, PickRandom(s_ErrorSounds));
+
+        return;
+      }
+
+      s_DestinyPool.AddDark(-value);
+
+      SaveDestinyPool();
+
+      await Destiny(ctx);
+    }
+
+    [Command("spendlight")]
+    [Description("Asks me to spend a Light Side Destiny Token.")]
+    public async Task SpendLight(CommandContext ctx)
+    {
+      if (s_DestinyPool.m_Light <= 0)
+      {
+        await Reply(ctx, "[ You're all out of Light Side tokens. ]");
+        await Play(ctx, PickRandom(s_ErrorSounds));
+      }
+      else
+      {
+        s_DestinyPool.SpendLight();
+
+        SaveDestinyPool();
+
+        await Destiny(ctx);
+      }
+    }
+
+    [Command("spenddark")]
+    [Description("Asks me to spend a Dark Side Destiny Token.")]
+    public async Task SpendDark(CommandContext ctx)
+    {
+      if (s_DestinyPool.m_Dark <= 0)
+      {
+        await Reply(ctx, "[ You're all out of Dark Side tokens. ]");
+        await Play(ctx, PickRandom(s_ErrorSounds));
+      }
+      else
+      {
+        s_DestinyPool.SpendDark();
+
+        SaveDestinyPool();
+
+        await Destiny(ctx);
+      }
+    }
+
+    [Command("cleardestiny")]
+    [Description("Asks me to remove all the Destiny Tokens.\n" +
+      "***GMs and Droid Mechanics only!***")]
+    public async Task ClearDestiny(CommandContext ctx)
+    {
+      if (s_DestinyPool.IsEmpty())
+      {
+        await Reply(ctx, "[ The Destiny Pool was already empty. ]");
+        await Play(ctx, PickRandom(s_CommandSounds));
+      }
+      else
+      {
+        s_DestinyPool.Clear();
+
+        SaveDestinyPool();
+
+        await Destiny(ctx);
+      }
+    }
+
+    public static void LoadSavedData()
+    {
+      var destinyPath = Path.Combine(s_SaveFolderPath, s_DestinyPoolPath);
+
+      if (File.Exists(destinyPath))
+      {
+        var destinyJson = string.Empty;
+
+        try
+        {
+          destinyJson = File.ReadAllText(destinyPath);
+        }
+        catch (IOException e)
+        {
+          Console.WriteLine($"Something went wrong while trying to read {s_DestinyPoolPath}:");
+          Console.WriteLine("    " + e.Message);
+
+          return;
+        }
+
+        try
+        {
+          s_DestinyPool = JsonSerializer.Deserialize<FfgDestinyPool>(destinyJson);
+        }
+        catch (JsonException e)
+        {
+          Console.WriteLine($"Something went wrong while trying to parse {s_DestinyPoolPath}:");
+          Console.WriteLine("    " + e.Message);
+
+          return;
+        }
+      }
+      else
+      {
+        s_DestinyPool = new FfgDestinyPool();
+      }
+
+      // add more as they come
+    }
+
+    private void SaveDestinyPool()
+    {
+      if (!Directory.Exists(s_SaveFolderPath))
+        Directory.CreateDirectory(s_SaveFolderPath);
+
+      var fullPath = Path.Combine(s_SaveFolderPath, s_DestinyPoolPath);
+      var destinyJson = string.Empty;
+
+      try
+      {
+        destinyJson = JsonSerializer.Serialize(s_DestinyPool);
+      }
+      catch (JsonException e)
+      {
+        Console.WriteLine($"Something went wrong while trying to serialize the Destiny Pool:");
+        Console.WriteLine("    " + e.Message);
+
+        return;
+      }
+
+      try
+      {
+        File.WriteAllText(fullPath, destinyJson);
+      }
+      catch (IOException e)
+      {
+        Console.WriteLine($"Something went wrong while trying to save {s_DestinyPoolPath}:");
+        Console.WriteLine("    " + e.Message);
+      }
+    }
+
     private string GetCurrentCrawlPage()
     {
       var output = FfgDie.s_SymbolEmoji[FfgDie.Symbol.Triumph] + Environment.NewLine;
@@ -1359,6 +1751,7 @@ namespace R2D20
     private async Task RollHelper(CommandContext ctx, FfgDie.RollType rollType, string[] args)
     {
       FfgDie.Pool pool;
+      var thisIsADestinyRoll = false;
 
       if (args.Length == 0)
       {
@@ -1367,20 +1760,29 @@ namespace R2D20
       else
       {
         pool = new FfgDie.Pool();
-        foreach (var arg in args)
+
+        if (args[0].ToLower() == "destiny")
         {
-          if (s_DiceByString.ContainsKey(arg))
+          thisIsADestinyRoll = true;
+          pool.Add(s_DiceByString["f"]);
+        }
+        else
+        {
+          foreach (var arg in args)
           {
-            pool.Add(s_DiceByString[arg]);
-          }
-          else
-          {
-            foreach (var ch in arg)
+            if (s_DiceByString.ContainsKey(arg))
             {
-              var str = ch.ToString();
-              if (s_DiceByString.ContainsKey(str))
+              pool.Add(s_DiceByString[arg]);
+            }
+            else
+            {
+              foreach (var ch in arg)
               {
-                pool.Add(s_DiceByString[str]);
+                var str = ch.ToString();
+                if (s_DiceByString.ContainsKey(str))
+                {
+                  pool.Add(s_DiceByString[str]);
+                }
               }
             }
           }
@@ -1516,51 +1918,63 @@ namespace R2D20
           line1 += dieResult;
 
         var message = $"{line0}{Environment.NewLine}{line1}";
-
-        string soundName;
-
-        if (result.m_Triumph && result.m_Despair)
-        {
-          soundName = PickRandom(s_ChaosSounds);
-        }
-        else if (result.m_Triumph)
-        {
-          if (result.m_SuccessStatus == FfgDie.Pool.RollResult.SuccessStatus.Success ||
-            result.m_SuccessStatus == FfgDie.Pool.RollResult.SuccessStatus.Nothing)
-          {
-            soundName = PickRandom(s_VeryHappySounds);
-          }
-          else
-          {
-            soundName = PickRandom(s_UnsureSounds);
-          }
-        }
-        else if (result.m_Despair)
-        {
-          if (result.m_SuccessStatus == FfgDie.Pool.RollResult.SuccessStatus.Failure ||
-            result.m_SuccessStatus == FfgDie.Pool.RollResult.SuccessStatus.Nothing)
-          {
-            soundName = PickRandom(s_VeryUpsetSounds);
-          }
-          else
-          {
-            soundName = PickRandom(s_UnsureSounds);
-          }
-        }
-        else if (result.m_SuccessStatus == FfgDie.Pool.RollResult.SuccessStatus.Success)
-          soundName = PickRandom(s_HappySounds);
-        else if (result.m_SuccessStatus == FfgDie.Pool.RollResult.SuccessStatus.Failure)
-          soundName = PickRandom(s_UpsetSounds);
-        else if (result.m_AdvantageStatus == FfgDie.Pool.RollResult.AdvantageStatus.Advantage)
-          soundName = PickRandom(s_KindaHappySounds);
-        else if (result.m_AdvantageStatus == FfgDie.Pool.RollResult.AdvantageStatus.Threat)
-          soundName = PickRandom(s_KindaUpsetSounds);
-        else
-          //soundName = "bup";
-          soundName = PickRandom(s_UnsureSounds);
-
         await Reply(ctx, message);
-        await Play(ctx, soundName);
+
+        if (thisIsADestinyRoll)
+        {
+          s_DestinyPool.AddLight((int)result.m_LightCount);
+          s_DestinyPool.AddDark((int)result.m_DarkCount);
+
+          SaveDestinyPool();
+
+          await Destiny(ctx);
+        }
+        else
+        {
+          string soundName;
+
+          if (result.m_Triumph && result.m_Despair)
+          {
+            soundName = PickRandom(s_ChaosSounds);
+          }
+          else if (result.m_Triumph)
+          {
+            if (result.m_SuccessStatus == FfgDie.Pool.RollResult.SuccessStatus.Success ||
+              result.m_SuccessStatus == FfgDie.Pool.RollResult.SuccessStatus.Nothing)
+            {
+              soundName = PickRandom(s_VeryHappySounds);
+            }
+            else
+            {
+              soundName = PickRandom(s_UnsureSounds);
+            }
+          }
+          else if (result.m_Despair)
+          {
+            if (result.m_SuccessStatus == FfgDie.Pool.RollResult.SuccessStatus.Failure ||
+              result.m_SuccessStatus == FfgDie.Pool.RollResult.SuccessStatus.Nothing)
+            {
+              soundName = PickRandom(s_VeryUpsetSounds);
+            }
+            else
+            {
+              soundName = PickRandom(s_UnsureSounds);
+            }
+          }
+          else if (result.m_SuccessStatus == FfgDie.Pool.RollResult.SuccessStatus.Success)
+            soundName = PickRandom(s_HappySounds);
+          else if (result.m_SuccessStatus == FfgDie.Pool.RollResult.SuccessStatus.Failure)
+            soundName = PickRandom(s_UpsetSounds);
+          else if (result.m_AdvantageStatus == FfgDie.Pool.RollResult.AdvantageStatus.Advantage)
+            soundName = PickRandom(s_KindaHappySounds);
+          else if (result.m_AdvantageStatus == FfgDie.Pool.RollResult.AdvantageStatus.Threat)
+            soundName = PickRandom(s_KindaUpsetSounds);
+          else
+            //soundName = "bup";
+            soundName = PickRandom(s_UnsureSounds);
+
+          await Play(ctx, soundName);
+        }
 
         /*if (result.m_ForceStatus == FfgDie.Pool.RollResult.ForceStatus.Light)
           await Play(ctx, "light");
@@ -1609,8 +2023,6 @@ namespace R2D20
         await Play(ctx, PickRandom(s_CommandSounds));
       }
     }
-
-
 
     private string Roll(uint die)
     {

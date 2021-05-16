@@ -6,6 +6,10 @@
     <RootNamespace>R2D20</RootNamespace>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <WarningLevel>0</WarningLevel>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="DSharpPlus" Version="4.0.1" />
     <PackageReference Include="DSharpPlus.CommandsNext" Version="4.0.1" />
