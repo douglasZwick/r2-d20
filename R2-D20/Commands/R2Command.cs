@@ -1580,6 +1580,49 @@ namespace R2D20
       await Destiny(ctx);
     }
 
+    [Command("cleardestiny")]
+    [Description("Asks me to remove all the Destiny Tokens.\n" +
+      "***GMs and Droid Mechanics only!***")]
+    public async Task ClearDestiny(CommandContext ctx)
+    {
+      var member = ctx.Member;
+      if (member == null)
+        return;
+
+      var allowed = false;
+
+      foreach (var role in member.Roles)
+      {
+        if (role.Name == "GM" || role.Name == "Droid Mechanic")
+        {
+          allowed = true;
+          break;
+        }
+      }
+
+      if (!allowed)
+      {
+        await Reply(ctx, "[ You don't have permission to use this command! ]");
+        await Play(ctx, PickRandom(s_ErrorSounds));
+
+        return;
+      }
+
+      if (s_DestinyPool.IsEmpty())
+      {
+        await Reply(ctx, "[ The Destiny Pool was already empty. ]");
+        await Play(ctx, PickRandom(s_CommandSounds));
+      }
+      else
+      {
+        s_DestinyPool.Clear();
+
+        SaveDestinyPool();
+
+        await Destiny(ctx);
+      }
+    }
+
     [Command("spendlight")]
     [Description("Asks me to spend a Light Side Destiny Token.")]
     public async Task SpendLight(CommandContext ctx)
@@ -1611,26 +1654,6 @@ namespace R2D20
       else
       {
         s_DestinyPool.SpendDark();
-
-        SaveDestinyPool();
-
-        await Destiny(ctx);
-      }
-    }
-
-    [Command("cleardestiny")]
-    [Description("Asks me to remove all the Destiny Tokens.\n" +
-      "***GMs and Droid Mechanics only!***")]
-    public async Task ClearDestiny(CommandContext ctx)
-    {
-      if (s_DestinyPool.IsEmpty())
-      {
-        await Reply(ctx, "[ The Destiny Pool was already empty. ]");
-        await Play(ctx, PickRandom(s_CommandSounds));
-      }
-      else
-      {
-        s_DestinyPool.Clear();
 
         SaveDestinyPool();
 
