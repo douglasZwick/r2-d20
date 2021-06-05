@@ -156,6 +156,7 @@ namespace R2D20
       { ("secret.kame", "secret.hame"), "secret.ha" },
       { ("scouter", "9000"), "what9000" },
       { ("dumbasses", "whatdidhecallus"), "nowaytotalktopeople" },
+      { ("goodquestion", "radarroom"), "drwawee" },
       //{ ("nut", "nut"), "nut" }, gotta fix this one soon
     };
     public static int s_AutoSoundDelay = 1000; // in ms
