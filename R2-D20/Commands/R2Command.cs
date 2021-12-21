@@ -477,14 +477,32 @@ namespace R2D20
       var embed = new DiscordEmbedBuilder();
 
       var defaultList = new List<string>();
-      var abcList     = new List<string>();
-      var defList     = new List<string>();
-      var ghiList     = new List<string>();
-      var jklList     = new List<string>();
-      var mnoList     = new List<string>();
-      var pqrsList    = new List<string>();
-      var tuvList     = new List<string>();
-      var wxyzList    = new List<string>();
+      var aList     = new List<string>();
+      var bList     = new List<string>();
+      var cList     = new List<string>();
+      var dList     = new List<string>();
+      var eList     = new List<string>();
+      var fList     = new List<string>();
+      var gList     = new List<string>();
+      var hList     = new List<string>();
+      var iList     = new List<string>();
+      var jList     = new List<string>();
+      var kList     = new List<string>();
+      var lList     = new List<string>();
+      var mList     = new List<string>();
+      var nList     = new List<string>();
+      var oList     = new List<string>();
+      var pList    = new List<string>();
+      var qList    = new List<string>();
+      var rList    = new List<string>();
+      var sList    = new List<string>();
+      var tList     = new List<string>();
+      var uList     = new List<string>();
+      var vList     = new List<string>();
+      var wList    = new List<string>();
+      var xList    = new List<string>();
+      var yList    = new List<string>();
+      var zList    = new List<string>();
 
       if (prefixSpecified)
       {
@@ -513,62 +531,125 @@ namespace R2D20
               defaultList.Add(name);
               break;
             case 'A':
+              aList.Add(name);
+              break;
             case 'B':
+              bList.Add(name);
+              break;
             case 'C':
-              abcList.Add(name);
+              cList.Add(name);
               break;
             case 'D':
+              dList.Add(name);
+              break;
             case 'E':
+              eList.Add(name);
+              break;
             case 'F':
-              defList.Add(name);
+              fList.Add(name);
               break;
             case 'G':
+              gList.Add(name);
+              break;
             case 'H':
+              hList.Add(name);
+              break;
             case 'I':
-              ghiList.Add(name);
+              iList.Add(name);
               break;
             case 'J':
+              jList.Add(name);
+              break;
             case 'K':
+              kList.Add(name);
+              break;
             case 'L':
-              jklList.Add(name);
+              lList.Add(name);
               break;
             case 'M':
+              mList.Add(name);
+              break;
             case 'N':
+              nList.Add(name);
+              break;
             case 'O':
-              mnoList.Add(name);
+              oList.Add(name);
               break;
             case 'P':
+              pList.Add(name);
+              break;
             case 'Q':
+              qList.Add(name);
+              break;
             case 'R':
+              rList.Add(name);
+              break;
             case 'S':
-              pqrsList.Add(name);
+              sList.Add(name);
               break;
             case 'T':
+              tList.Add(name);
+              break;
             case 'U':
+              uList.Add(name);
+              break;
             case 'V':
-              tuvList.Add(name);
+              vList.Add(name);
               break;
             case 'W':
+              wList.Add(name);
+              break;
             case 'X':
+              xList.Add(name);
+              break;
             case 'Y':
+              yList.Add(name);
+              break;
             case 'Z':
-              wxyzList.Add(name);
+              zList.Add(name);
               break;
           }
         }
 
         AddSoundListEmbedField(embed, defaultList, "Digits / Symbols");
-        AddSoundListEmbedField(embed, abcList,  "ABC");
-        AddSoundListEmbedField(embed, defList,  "DEF");
-        AddSoundListEmbedField(embed, ghiList,  "GHI");
-        AddSoundListEmbedField(embed, jklList,  "JKL");
-        AddSoundListEmbedField(embed, mnoList,  "MNO");
-        AddSoundListEmbedField(embed, pqrsList, "PQRS");
-        AddSoundListEmbedField(embed, tuvList,  "TUV");
-        AddSoundListEmbedField(embed, wxyzList, "WXYZ");
-      }
+        AddSoundListEmbedField(embed, aList,  "A");
+        AddSoundListEmbedField(embed, bList,  "B");
+        AddSoundListEmbedField(embed, cList,  "C");
+        AddSoundListEmbedField(embed, dList,  "D");
+        AddSoundListEmbedField(embed, eList,  "E");
+        AddSoundListEmbedField(embed, fList,  "F");
+        await ctx.RespondAsync(embed: embed);
+        embed = new DiscordEmbedBuilder();
 
-      await ctx.RespondAsync(embed: embed);
+        AddSoundListEmbedField(embed, gList,  "G");
+        AddSoundListEmbedField(embed, hList,  "H");
+        AddSoundListEmbedField(embed, iList,  "I");
+        AddSoundListEmbedField(embed, jList,  "J");
+        AddSoundListEmbedField(embed, kList,  "K");
+        AddSoundListEmbedField(embed, lList,  "L");
+        await ctx.RespondAsync(embed: embed);
+        embed = new DiscordEmbedBuilder();
+
+        AddSoundListEmbedField(embed, mList,  "M");
+        AddSoundListEmbedField(embed, nList,  "N");
+        AddSoundListEmbedField(embed, oList,  "O");
+        AddSoundListEmbedField(embed, pList,  "P");
+        AddSoundListEmbedField(embed, qList,  "Q");
+        AddSoundListEmbedField(embed, rList,  "R");
+        AddSoundListEmbedField(embed, sList,  "S");
+        await ctx.RespondAsync(embed: embed);
+        embed = new DiscordEmbedBuilder();
+
+        AddSoundListEmbedField(embed, tList,  "T");
+        AddSoundListEmbedField(embed, uList,  "U");
+        AddSoundListEmbedField(embed, vList,  "V");
+        AddSoundListEmbedField(embed, wList,  "W");
+        AddSoundListEmbedField(embed, wList,  "X");
+        AddSoundListEmbedField(embed, yList,  "Y");
+        AddSoundListEmbedField(embed, zList,  "Z");
+        await ctx.RespondAsync(embed: embed);
+        embed = new DiscordEmbedBuilder();
+      }
     }
 
     [Command("musiclist")]
