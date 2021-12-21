@@ -36,6 +36,42 @@ namespace R2D20
       "spinee",
     };
 
+    public List<string> m_CommonChatter = new List<string>()
+    {
+      "pog",
+      "i know",
+      "muh huh",
+      "wow",
+      "okay",
+      "i understand",
+      "really?",
+      "i don't get it",
+      "brb",
+      "whatever",
+
+    };
+
+    public List<string> m_RareChatter = new List<string>()
+    {
+      "you do you",
+      "i'm not here to judge",
+      "figure it out",
+      "thanks for coming",
+      "not pog",
+      "R2-D20 M O M E N T",
+      "wish you could see my face right now",
+    };
+
+    public List<string> m_VeryRareChatter = new List<string>()
+    {
+      "smells like kpits in here",
+      "that's quite enough out of you",
+      "permaban",
+      "god abandoned this place long ago",
+    };
+
+    public int MessageCounter = 0;
+
     public async Task RunAsync()
     {
       R2Command.s_StartDateTime = DateTime.Now;
@@ -64,6 +100,34 @@ namespace R2D20
       m_Client.Ready += OnClientReady;
       m_Client.MessageCreated += OnMessageCreated;
       m_Client.MessageCreated += CheckForPlaySyntax;
+
+      m_Client.MessageCreated += async (s, e) =>
+      {
+        if (!e.Author.IsBot && e.Channel.Name != "vent")
+        {
+          MessageCounter++;
+          if(MessageCounter % 1000 == 0)
+          {
+            //Very Rare message
+            MessageCounter = 0;
+            int messageIndex = s_RNG.Next(m_VeryRareChatter.Count);
+            await e.Message.RespondAsync(m_VeryRareChatter[messageIndex]);
+          }
+          else if(MessageCounter % 500 == 0)
+          {
+            //Rare message
+            int messageIndex = s_RNG.Next(m_RareChatter.Count);
+            await e.Message.RespondAsync(m_RareChatter[messageIndex]);
+          }
+          else if(MessageCounter % 100 == 0)
+          {
+            //Common message
+            int messageIndex = s_RNG.Next(m_CommonChatter.Count);
+            await e.Message.RespondAsync(m_CommonChatter[messageIndex]);
+          }
+        }
+      };
+
       m_Client.MessageUpdated += OnMessageUpdated;
       m_Client.MessageUpdated += CheckUpdatedMessageForPlaySyntax;
 
