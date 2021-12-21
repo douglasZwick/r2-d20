@@ -48,7 +48,7 @@ namespace R2D20
       "i don't get it",
       "brb",
       "whatever",
-
+      "asdf",
     };
 
     public List<string> m_RareChatter = new List<string>()
@@ -62,7 +62,7 @@ namespace R2D20
       "wish you could see my face right now",
     };
 
-    public List<string> m_VeryRareChatter = new List<string>()
+    public List<string> m_MythicChatter = new List<string>()
     {
       "smells like kpits in here",
       "that's quite enough out of you",
@@ -71,10 +71,20 @@ namespace R2D20
     };
 
     public int MessageCounter = 0;
+    public int ChatterThreshold;
+    public int CommonChatterCounter = 0;
+    public int RareChatterCounter = 0;
+    public int MythicChatterCounter = 0;
+    public int RareChatterThreshold;
+    public int MythicChatterThreshold;
 
     public async Task RunAsync()
     {
       R2Command.s_StartDateTime = DateTime.Now;
+
+      RandomizeChatterThreshold();
+      RandomizeRareChatterThreshold();
+      RandomizeMythicChatterThreshold();
 
       var json = string.Empty;
 
@@ -100,34 +110,7 @@ namespace R2D20
       m_Client.Ready += OnClientReady;
       m_Client.MessageCreated += OnMessageCreated;
       m_Client.MessageCreated += CheckForPlaySyntax;
-
-      m_Client.MessageCreated += async (s, e) =>
-      {
-        if (!e.Author.IsBot && e.Channel.Name != "vent")
-        {
-          MessageCounter++;
-          if(MessageCounter % 1000 == 0)
-          {
-            //Very Rare message
-            MessageCounter = 0;
-            int messageIndex = s_RNG.Next(m_VeryRareChatter.Count);
-            await e.Message.RespondAsync(m_VeryRareChatter[messageIndex]);
-          }
-          else if(MessageCounter % 500 == 0)
-          {
-            //Rare message
-            int messageIndex = s_RNG.Next(m_RareChatter.Count);
-            await e.Message.RespondAsync(m_RareChatter[messageIndex]);
-          }
-          else if(MessageCounter % 100 == 0)
-          {
-            //Common message
-            int messageIndex = s_RNG.Next(m_CommonChatter.Count);
-            await e.Message.RespondAsync(m_CommonChatter[messageIndex]);
-          }
-        }
-      };
-
+      m_Client.MessageCreated += Chatter;
       m_Client.MessageUpdated += OnMessageUpdated;
       m_Client.MessageUpdated += CheckUpdatedMessageForPlaySyntax;
 
@@ -156,6 +139,64 @@ namespace R2D20
     private Task OnClientReady(DiscordClient client, ReadyEventArgs e)
     {
       return Task.CompletedTask;
+    }
+
+    private Task Chatter(DiscordClient client, MessageCreateEventArgs e)
+    {
+      if (e.Author.IsBot || e.Channel.Name == "vent") return Task.CompletedTask;
+
+      _ = Task.Run(async () =>
+      {
+        await Task.Delay(1000);
+        MessageCounter++;
+        if(MessageCounter >= ChatterThreshold)
+        {
+          string message = string.Empty;
+          //Which rarity are we saying?
+          if(RareChatterCounter >= MythicChatterThreshold)
+          {
+            //Mythic Chatter
+            message = m_MythicChatter[s_RNG.Next(m_MythicChatter.Count)];
+            RareChatterCounter = 0;
+            RandomizeMythicChatterThreshold();
+            MythicChatterCounter++;
+          }
+          else if(CommonChatterCounter >= RareChatterThreshold)
+          {
+            //Rare Chatter
+            message = m_RareChatter[s_RNG.Next(m_RareChatter.Count)];
+            CommonChatterCounter = 0;
+            RandomizeRareChatterThreshold();
+            RareChatterCounter++;
+          }
+          else
+          {
+            //Common Chatter
+            message = m_CommonChatter[s_RNG.Next(m_CommonChatter.Count)];
+            CommonChatterCounter++;
+          }
+
+          RandomizeChatterThreshold();
+          await e.Channel.SendMessageAsync(message).ConfigureAwait(false);
+        }
+      });
+
+      return Task.CompletedTask;
+    }
+
+    private void RandomizeRareChatterThreshold()
+    {
+      RareChatterThreshold = s_RNG.Next(5, 10);
+    }
+    private void RandomizeMythicChatterThreshold()
+    {
+      MythicChatterThreshold = s_RNG.Next(5, 10);
+    }
+    
+    private void RandomizeChatterThreshold()
+    {
+      ChatterThreshold = s_RNG.Next(5, 75);
+      MessageCounter = 0;
     }
 
     private Task OnMessageCreated(DiscordClient client, MessageCreateEventArgs e)
