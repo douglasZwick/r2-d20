@@ -38,36 +38,17 @@ namespace R2D20
 
     public List<string> m_CommonChatter = new List<string>()
     {
-      "pog",
-      "i know",
-      "muh huh",
-      "wow",
-      "okay",
-      "i understand",
-      "really?",
-      "i don't get it",
-      "brb",
-      "whatever",
-      "asdf",
+
     };
 
     public List<string> m_RareChatter = new List<string>()
     {
-      "you do you",
-      "i'm not here to judge",
-      "figure it out",
-      "thanks for coming",
-      "not pog",
-      "R2-D20 M O M E N T",
-      "wish you could see my face right now",
+
     };
 
     public List<string> m_MythicChatter = new List<string>()
     {
-      "smells like kpits in here",
-      "that's quite enough out of you",
-      "permaban",
-      "god abandoned this place long ago",
+
     };
 
     public int MessageCounter = 0;
@@ -77,6 +58,10 @@ namespace R2D20
     public int MythicChatterCounter = 0;
     public int RareChatterThreshold;
     public int MythicChatterThreshold;
+
+    public string CommonChatterPath = $"text{Path.DirectorySeparatorChar}CommonChatter.txt";
+    public string RareChatterPath = $"text{Path.DirectorySeparatorChar}RareChatter.txt";
+    public string MythicChatterPath = $"text{Path.DirectorySeparatorChar}MythicChatter.txt";
 
     public async Task RunAsync()
     {
@@ -152,11 +137,26 @@ namespace R2D20
         if(MessageCounter >= ChatterThreshold)
         {
           string message = string.Empty;
+          bool bMythic = false;
           //Which rarity are we saying?
           if(RareChatterCounter >= MythicChatterThreshold)
           {
             //Mythic Chatter
+            try
+            {
+              using (var sr = new StreamReader(MythicChatterPath))
+              {
+                string chatterLines = sr.ReadToEnd();
+                m_MythicChatter = chatterLines.Split(System.Environment.NewLine).ToList();
+              }
+            }
+            catch (IOException e)
+            {
+              Console.WriteLine("The file could not be read: ");
+              Console.WriteLine(e.Message);
+            }
             message = m_MythicChatter[s_RNG.Next(m_MythicChatter.Count)];
+            bMythic = true;
             RareChatterCounter = 0;
             RandomizeMythicChatterThreshold();
             MythicChatterCounter++;
@@ -164,6 +164,19 @@ namespace R2D20
           else if(CommonChatterCounter >= RareChatterThreshold)
           {
             //Rare Chatter
+            try
+            {
+              using (var sr = new StreamReader(RareChatterPath))
+              {
+                string chatterLines = sr.ReadToEnd();
+                m_RareChatter = chatterLines.Split(System.Environment.NewLine).ToList();
+              }
+            }
+            catch (IOException e)
+            {
+              Console.WriteLine("The file could not be read: ");
+              Console.WriteLine(e.Message);
+            }
             message = m_RareChatter[s_RNG.Next(m_RareChatter.Count)];
             CommonChatterCounter = 0;
             RandomizeRareChatterThreshold();
@@ -172,12 +185,32 @@ namespace R2D20
           else
           {
             //Common Chatter
+            try
+            {
+              using (var sr = new StreamReader(CommonChatterPath))
+              {
+                string chatterLines = sr.ReadToEnd();
+                m_CommonChatter = chatterLines.Split(System.Environment.NewLine).ToList();
+              }
+            }
+            catch (IOException e)
+            {
+              Console.WriteLine("The file could not be read: ");
+              Console.WriteLine(e.Message);
+            }
             message = m_CommonChatter[s_RNG.Next(m_CommonChatter.Count)];
             CommonChatterCounter++;
           }
 
           RandomizeChatterThreshold();
-          await e.Channel.SendMessageAsync(message).ConfigureAwait(false);
+          if(bMythic)
+          {
+            await e.Message.RespondAsync(message).ConfigureAwait(false);
+          }
+          else
+          {
+            await e.Channel.SendMessageAsync(message).ConfigureAwait(false);
+          }
         }
       });
 
@@ -190,12 +223,12 @@ namespace R2D20
     }
     private void RandomizeMythicChatterThreshold()
     {
-      MythicChatterThreshold = s_RNG.Next(5, 10);
+      MythicChatterThreshold = s_RNG.Next(3, 5);
     }
     
     private void RandomizeChatterThreshold()
     {
-      ChatterThreshold = s_RNG.Next(5, 75);
+      ChatterThreshold = s_RNG.Next(5, 40);
       MessageCounter = 0;
     }
 
