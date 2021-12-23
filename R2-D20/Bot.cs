@@ -51,6 +51,21 @@ namespace R2D20
 
     };
 
+    public List<string> AggroResponses = new List<string>()
+    {
+
+    };
+
+    public List<string> Responses = new List<string>()
+    {
+
+    };
+
+    public List<string> BadWords = new List<string>()
+    {
+
+    };
+
     public int MessageCounter = 0;
     public int ChatterThreshold;
     public int CommonChatterCounter = 0;
@@ -62,6 +77,9 @@ namespace R2D20
     public string CommonChatterPath = $"text{Path.DirectorySeparatorChar}CommonChatter.txt";
     public string RareChatterPath = $"text{Path.DirectorySeparatorChar}RareChatter.txt";
     public string MythicChatterPath = $"text{Path.DirectorySeparatorChar}MythicChatter.txt";
+    public string AggroResponsesPath = $"text{Path.DirectorySeparatorChar}AggroResponses.txt";
+    public string ResponsesPath = $"text{Path.DirectorySeparatorChar}Responses.txt";
+    public string BadWordsPath = $"text{Path.DirectorySeparatorChar}BadWords.txt";
 
     public async Task RunAsync()
     {
@@ -132,103 +150,180 @@ namespace R2D20
 
       _ = Task.Run(async () =>
       {
-        await Task.Delay(1000);
-        MessageCounter++;
-        if(MessageCounter >= ChatterThreshold)
+        //Did we get pinged?
+        if(e.Message.MentionedUsers.Contains(client.CurrentUser))
         {
-          string message = string.Empty;
-          bool bMythic = false;
-          //Which rarity are we saying?
-          if(RareChatterCounter >= MythicChatterThreshold)
+          await Task.Delay(2000);
+          string message = String.Empty;
+          bool messageIsAggro = false;
+          try
           {
-            //Mythic Chatter
-            try
+            using (var sr = new StreamReader(BadWordsPath))
             {
-              using (var sr = new StreamReader(MythicChatterPath))
-              {
-                string chatterLines = sr.ReadToEnd();
-                m_MythicChatter = chatterLines.Split(System.Environment.NewLine).ToList();
-              }
+              string chatterLines = sr.ReadToEnd();
+              BadWords = chatterLines.Split(System.Environment.NewLine).ToList();
             }
-            catch (IOException e)
-            {
-              Console.WriteLine("The file could not be read: ");
-              Console.WriteLine(e.Message);
-            }
-            message = m_MythicChatter[s_RNG.Next(m_MythicChatter.Count)];
-            bMythic = true;
-            RareChatterCounter = 0;
-            RandomizeMythicChatterThreshold();
-            MythicChatterCounter++;
           }
-          else if(CommonChatterCounter >= RareChatterThreshold)
+          catch (IOException e)
           {
-            //Rare Chatter
-            try
-            {
-              using (var sr = new StreamReader(RareChatterPath))
-              {
-                string chatterLines = sr.ReadToEnd();
-                m_RareChatter = chatterLines.Split(System.Environment.NewLine).ToList();
-              }
-            }
-            catch (IOException e)
-            {
-              Console.WriteLine("The file could not be read: ");
-              Console.WriteLine(e.Message);
-            }
-            message = m_RareChatter[s_RNG.Next(m_RareChatter.Count)];
-            CommonChatterCounter = 0;
-            RandomizeRareChatterThreshold();
-            RareChatterCounter++;
-          }
-          else
-          {
-            //Common Chatter
-            try
-            {
-              using (var sr = new StreamReader(CommonChatterPath))
-              {
-                string chatterLines = sr.ReadToEnd();
-                m_CommonChatter = chatterLines.Split(System.Environment.NewLine).ToList();
-              }
-            }
-            catch (IOException e)
-            {
-              Console.WriteLine("The file could not be read: ");
-              Console.WriteLine(e.Message);
-            }
-            message = m_CommonChatter[s_RNG.Next(m_CommonChatter.Count)];
-            CommonChatterCounter++;
+            Console.WriteLine("The file could not be read: ");
+            Console.WriteLine(e.Message);
           }
 
-          RandomizeChatterThreshold();
-          if(bMythic)
+          for(int i = 0; i < BadWords.Count; ++i)
           {
-            await e.Message.RespondAsync(message).ConfigureAwait(false);
+            if(e.Message.Content.ToLower().Contains(BadWords[i]))
+            {
+              messageIsAggro = true;
+            }
+          }
+
+          Console.WriteLine($"Ping received. Message is aggro: ({messageIsAggro})");
+
+          if(messageIsAggro)
+          {
+            try
+            {
+              using (var sr = new StreamReader(AggroResponsesPath))
+              {
+                string chatterLines = sr.ReadToEnd();
+                AggroResponses = chatterLines.Split(System.Environment.NewLine).ToList();
+              }
+            }
+            catch (IOException e)
+            {
+              Console.WriteLine("The file could not be read: ");
+              Console.WriteLine(e.Message);
+            }
+            message = AggroResponses[s_RNG.Next(AggroResponses.Count)];
           }
           else
           {
-            await e.Channel.SendMessageAsync(message).ConfigureAwait(false);
+            try
+            {
+              using (var sr = new StreamReader(ResponsesPath))
+              {
+                string chatterLines = sr.ReadToEnd();
+                Responses = chatterLines.Split(System.Environment.NewLine).ToList();
+              }
+            }
+            catch (IOException e)
+            {
+              Console.WriteLine("The file could not be read: ");
+              Console.WriteLine(e.Message);
+            }
+            message = Responses[s_RNG.Next(Responses.Count)];
+          }
+
+          await e.Message.RespondAsync(message).ConfigureAwait(false);
+        }
+        else
+        {
+          await Task.Delay(1000);
+          MessageCounter++;
+          if(MessageCounter >= ChatterThreshold)
+          {
+            string message = string.Empty;
+            bool bMythic = false;
+            //Which rarity are we saying?
+            if(RareChatterCounter >= MythicChatterThreshold)
+            {
+              //Mythic Chatter
+              try
+              {
+                using (var sr = new StreamReader(MythicChatterPath))
+                {
+                  string chatterLines = sr.ReadToEnd();
+                  m_MythicChatter = chatterLines.Split(System.Environment.NewLine).ToList();
+                }
+              }
+              catch (IOException e)
+              {
+                Console.WriteLine("The file could not be read: ");
+                Console.WriteLine(e.Message);
+              }
+              message = m_MythicChatter[s_RNG.Next(m_MythicChatter.Count)];
+              bMythic = true;
+              RareChatterCounter = 0;
+              RandomizeMythicChatterThreshold();
+              MythicChatterCounter++;
+              Console.WriteLine($"Mythic Chatter Counter: {MythicChatterCounter}");
+            }
+            else if(CommonChatterCounter >= RareChatterThreshold)
+            {
+              //Rare Chatter
+              try
+              {
+                using (var sr = new StreamReader(RareChatterPath))
+                {
+                  string chatterLines = sr.ReadToEnd();
+                  m_RareChatter = chatterLines.Split(System.Environment.NewLine).ToList();
+                }
+              }
+              catch (IOException e)
+              {
+                Console.WriteLine("The file could not be read: ");
+                Console.WriteLine(e.Message);
+              }
+              message = m_RareChatter[s_RNG.Next(m_RareChatter.Count)];
+              CommonChatterCounter = 0;
+              RandomizeRareChatterThreshold();
+              RareChatterCounter++;
+              Console.WriteLine($"Rare Chatter Counter: {RareChatterCounter}");
+            }
+            else
+            {
+              //Common Chatter
+              try
+              {
+                using (var sr = new StreamReader(CommonChatterPath))
+                {
+                  string chatterLines = sr.ReadToEnd();
+                  m_CommonChatter = chatterLines.Split(System.Environment.NewLine).ToList();
+                }
+              }
+              catch (IOException e)
+              {
+                Console.WriteLine("The file could not be read: ");
+                Console.WriteLine(e.Message);
+              }
+              message = m_CommonChatter[s_RNG.Next(m_CommonChatter.Count)];
+              CommonChatterCounter++;
+              Console.WriteLine($"Common Chatter Counter: {CommonChatterCounter}");
+            }
+
+            RandomizeChatterThreshold();
+            if(bMythic)
+            {
+              await e.Message.RespondAsync(message).ConfigureAwait(false);
+              //Console.WriteLine(message);
+            }
+            else
+            {
+              await e.Channel.SendMessageAsync(message).ConfigureAwait(false);
+              //Console.WriteLine(message);
+            }
           }
         }
       });
-
       return Task.CompletedTask;
     }
 
     private void RandomizeRareChatterThreshold()
     {
       RareChatterThreshold = s_RNG.Next(5, 10);
+      Console.WriteLine($"Current Rare Chatter Threshold: {RareChatterThreshold}");
     }
     private void RandomizeMythicChatterThreshold()
     {
       MythicChatterThreshold = s_RNG.Next(3, 5);
+      Console.WriteLine($"Current Mythic Chatter Threshold: {MythicChatterThreshold}");
     }
     
     private void RandomizeChatterThreshold()
     {
       ChatterThreshold = s_RNG.Next(5, 40);
+      Console.WriteLine($"Current Chatter Threshold: {ChatterThreshold}");
       MessageCounter = 0;
     }
 
