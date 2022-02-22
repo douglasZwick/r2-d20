@@ -311,18 +311,18 @@ namespace R2D20
 
     private void RandomizeRareChatterThreshold()
     {
-      RareChatterThreshold = s_RNG.Next(5, 10);
+      RareChatterThreshold = s_RNG.Next(3, 7);
       Console.WriteLine($"Current Rare Chatter Threshold: {RareChatterThreshold}");
     }
     private void RandomizeMythicChatterThreshold()
     {
-      MythicChatterThreshold = s_RNG.Next(3, 5);
+      MythicChatterThreshold = s_RNG.Next(2, 4);
       Console.WriteLine($"Current Mythic Chatter Threshold: {MythicChatterThreshold}");
     }
     
     private void RandomizeChatterThreshold()
     {
-      ChatterThreshold = s_RNG.Next(5, 40);
+      ChatterThreshold = s_RNG.Next(15, 50);
       Console.WriteLine($"Current Chatter Threshold: {ChatterThreshold}");
       MessageCounter = 0;
     }
